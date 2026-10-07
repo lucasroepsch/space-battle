@@ -31,7 +31,6 @@ canvas {
   width: 100%;
   height: 100%;
   display: block;
-  background: #010107;
 }
 
 #hud {
@@ -46,11 +45,11 @@ canvas {
 }
 
 .box {
-  background: rgba(2, 4, 18, .85);
+  background: rgba(2,4,18,.86);
   border: 1px solid #5264b8;
   border-radius: 12px;
   padding: 10px 15px;
-  min-width: 175px;
+  min-width: 180px;
   box-shadow: 0 0 18px rgba(80,100,255,.2);
 }
 
@@ -95,22 +94,25 @@ canvas {
   justify-content: center;
   align-items: center;
   z-index: 10;
-  background: rgba(0,0,10,.4);
+  background: rgba(0,0,10,.5);
 }
 
 .card {
+  width: min(520px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
   text-align: center;
-  padding: 35px;
+  padding: 30px;
   border-radius: 20px;
-  background: rgba(3,5,20,.95);
+  background: rgba(3,5,20,.97);
   border: 1px solid #596ee0;
   box-shadow: 0 0 50px rgba(60,80,255,.35);
 }
 
 h1 {
   margin: 0 0 12px;
-  font-size: 48px;
-  letter-spacing: 5px;
+  font-size: 44px;
+  letter-spacing: 4px;
   text-shadow:
     0 0 8px #fff,
     0 0 25px #4c7dff;
@@ -122,21 +124,76 @@ h1 {
 }
 
 button {
-  margin-top: 18px;
-  padding: 13px 28px;
+  margin: 8px;
+  padding: 12px 24px;
   border: 0;
   border-radius: 10px;
   background: #426aff;
   color: white;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 0 18px #426aff;
+  box-shadow: 0 0 15px #426aff;
 }
 
 button:hover {
   background: #6c8cff;
-  box-shadow: 0 0 30px #6c8cff;
+  box-shadow: 0 0 25px #6c8cff;
+}
+
+button:disabled {
+  background: #30364e;
+  color: #777f9e;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.upgrade {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 12px;
+  background: rgba(20,25,60,.75);
+  border: 1px solid #36447e;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.upgrade-info {
+  flex: 1;
+}
+
+.upgrade-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.upgrade-desc {
+  color: #929bc5;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.upgrade-level {
+  color: #67e8ff;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.upgrade button {
+  min-width: 105px;
+  margin: 0;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+.money {
+  color: #6dff9b;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 0 0 12px #00ff66;
 }
 
 .hidden {
@@ -175,6 +232,9 @@ button:hover {
     <div class="label">SCORE</div>
     <div class="value" id="score">0</div>
 
+    <div class="label">MONEY</div>
+    <div class="value money" id="hudMoney">$0.00</div>
+
   </div>
 
   <div class="box">
@@ -207,7 +267,20 @@ button:hover {
 
     <p><b>SPACE</b> to fire</p>
 
-    <button id="start">START GAME</button>
+    <p>
+      Money earned:
+      <b>0.05% of your score</b>
+    </p>
+
+    <div>
+      <button onclick="openUpgrades()">
+        UPGRADES
+      </button>
+
+      <button onclick="startGame()">
+        START GAME
+      </button>
+    </div>
 
   </div>
 
@@ -220,6 +293,10 @@ A / D or ← / → = Move &nbsp; | &nbsp; SPACE = Shoot
 </div>
 
 <script>
+
+/* =========================================
+   CANVAS
+========================================= */
 
 const canvas =
   document.getElementById("canvas");
@@ -235,7 +312,17 @@ let level = 1;
 let score = 0;
 let lastTime = 0;
 
+
+/* =========================================
+   KEYBOARD
+========================================= */
+
 const keys = {};
+
+
+/* =========================================
+   GAME ARRAYS
+========================================= */
 
 let enemies = [];
 let playerShots = [];
@@ -244,11 +331,88 @@ let particles = [];
 let stars = [];
 
 
+/* =========================================
+   MONEY
+========================================= */
+
+let money = 0;
+
+
 /*
-========================================
-NEON COLORS
-========================================
+   0.05% = 0.0005
+
+   Example:
+   10,000 score = $5
 */
+
+function scoreToMoney(points) {
+  return points * 0.0005;
+}
+
+
+/* =========================================
+   UPGRADES
+========================================= */
+
+const upgrades = {
+
+  fireRate: {
+    level: 0,
+    baseCost: 2,
+    increase: 0.025
+  },
+
+  damage: {
+    level: 0,
+    baseCost: 3,
+    increase: 1
+  },
+
+  shield: {
+    level: 0,
+    baseCost: 2,
+    increase: 20
+  },
+
+  hull: {
+    level: 0,
+    baseCost: 2,
+    increase: 20
+  },
+
+  speed: {
+    level: 0,
+    baseCost: 2,
+    increase: 60
+  }
+
+};
+
+
+/*
+   Upgrade price increases
+   every time you buy it.
+*/
+
+function upgradeCost(type) {
+
+  const upgrade =
+    upgrades[type];
+
+  return (
+    upgrade.baseCost *
+    Math.pow(
+      1.65,
+      upgrade.level
+    )
+  );
+
+}
+
+
+/* =========================================
+   NEON COLORS
+========================================= */
 
 const neonColors = [
 
@@ -303,6 +467,10 @@ const neonColors = [
 ];
 
 
+/* =========================================
+   PLAYER
+========================================= */
+
 const player = {
 
   x: 600,
@@ -311,18 +479,21 @@ const player = {
   speed: 450,
 
   hp: 100,
-  shield: 100,
+  maxHp: 100,
 
-  cooldown: 0
+  shield: 100,
+  maxShield: 100,
+
+  cooldown: 0,
+
+  damage: 1
 
 };
 
 
-/*
-========================================
-RESIZE
-========================================
-*/
+/* =========================================
+   RESIZE
+========================================= */
 
 function resize() {
 
@@ -354,11 +525,38 @@ window.addEventListener(
 );
 
 
-/*
-========================================
-STARS
-========================================
-*/
+/* =========================================
+   APPLY UPGRADES
+========================================= */
+
+function applyUpgrades() {
+
+  player.maxHp =
+    100 +
+    upgrades.hull.level *
+    upgrades.hull.increase;
+
+  player.maxShield =
+    100 +
+    upgrades.shield.level *
+    upgrades.shield.increase;
+
+  player.speed =
+    450 +
+    upgrades.speed.level *
+    upgrades.speed.increase;
+
+  player.damage =
+    1 +
+    upgrades.damage.level *
+    upgrades.damage.increase;
+
+}
+
+
+/* =========================================
+   STARS
+========================================= */
 
 function createStars() {
 
@@ -394,11 +592,9 @@ function createStars() {
 }
 
 
-/*
-========================================
-CREATE ENEMIES
-========================================
-*/
+/* =========================================
+   CREATE ENEMIES
+========================================= */
 
 function createEnemies() {
 
@@ -449,13 +645,11 @@ function createEnemies() {
       120 +
       row * 85;
 
-
     const hp =
       2 +
       Math.floor(
         level / 3
       );
-
 
     const color =
       neonColors[
@@ -508,13 +702,13 @@ function createEnemies() {
 }
 
 
-/*
-========================================
-START GAME
-========================================
-*/
+/* =========================================
+   START GAME
+========================================= */
 
 function startGame() {
+
+  applyUpgrades();
 
   resize();
 
@@ -522,9 +716,11 @@ function startGame() {
 
   score = 0;
 
-  player.hp = 100;
+  player.hp =
+    player.maxHp;
 
-  player.shield = 100;
+  player.shield =
+    player.maxShield;
 
   player.x =
     W / 2;
@@ -556,17 +752,9 @@ function startGame() {
 }
 
 
-document
-  .getElementById("start")
-  .onclick =
-  startGame;
-
-
-/*
-========================================
-KEYBOARD
-========================================
-*/
+/* =========================================
+   KEYBOARD
+========================================= */
 
 window.addEventListener(
   "keydown",
@@ -622,11 +810,9 @@ window.addEventListener(
 );
 
 
-/*
-========================================
-PLAYER SHOOT
-========================================
-*/
+/* =========================================
+   PLAYER SHOOT
+========================================= */
 
 function playerShoot() {
 
@@ -648,22 +834,39 @@ function playerShoot() {
       700,
 
     radius:
-      4
+      4,
+
+    damage:
+      player.damage
 
   });
 
 
-  player.cooldown =
+  /*
+     Higher fire-rate upgrade
+     means shorter cooldown.
+  */
+
+  const baseCooldown =
     .16;
+
+  const reduction =
+    upgrades.fireRate.level *
+    upgrades.fireRate.increase;
+
+  player.cooldown =
+    Math.max(
+      .045,
+      baseCooldown -
+      reduction
+    );
 
 }
 
 
-/*
-========================================
-ENEMY SHOOT
-========================================
-*/
+/* =========================================
+   ENEMY SHOOT
+========================================= */
 
 function enemyShoot(enemy) {
 
@@ -690,11 +893,9 @@ function enemyShoot(enemy) {
 }
 
 
-/*
-========================================
-PLAYER DAMAGE
-========================================
-*/
+/* =========================================
+   PLAYER DAMAGE
+========================================= */
 
 function hurtPlayer(
   amount
@@ -744,11 +945,9 @@ function hurtPlayer(
 }
 
 
-/*
-========================================
-EXPLOSION
-========================================
-*/
+/* =========================================
+   EXPLOSION
+========================================= */
 
 function explosion(
   x,
@@ -807,18 +1006,11 @@ function explosion(
 }
 
 
-/*
-========================================
-UPDATE
-========================================
-*/
+/* =========================================
+   UPDATE
+========================================= */
 
 function update(dt) {
-
-
-  /*
-  PLAYER MOVEMENT
-  */
 
   let direction = 0;
 
@@ -859,10 +1051,6 @@ function update(dt) {
     );
 
 
-  /*
-  SHOOT
-  */
-
   if (
     keys.space
   ) {
@@ -887,7 +1075,6 @@ function update(dt) {
   for (
     const enemy of enemies
   ) {
-
 
     enemy.x =
       enemy.baseX +
@@ -961,7 +1148,7 @@ function update(dt) {
 
 
   /*
-  PLAYER BULLETS HIT ENEMIES
+  COLLISIONS
   */
 
   for (
@@ -996,7 +1183,8 @@ function update(dt) {
           true;
 
 
-        enemy.hp--;
+        enemy.hp -=
+          shot.damage;
 
 
         explosion(
@@ -1054,7 +1242,7 @@ function update(dt) {
 
 
   /*
-  ENEMY SHOTS HIT PLAYER
+  ENEMY SHOTS
   */
 
   for (
@@ -1135,7 +1323,7 @@ function update(dt) {
 
   player.shield =
     Math.min(
-      100,
+      player.maxShield,
       player.shield +
       dt * 4
     );
@@ -1155,14 +1343,14 @@ function update(dt) {
 
     player.hp =
       Math.min(
-        100,
+        player.maxHp,
         player.hp + 15
       );
 
 
     player.shield =
       Math.min(
-        100,
+        player.maxShield,
         player.shield + 30
       );
 
@@ -1177,11 +1365,9 @@ function update(dt) {
 }
 
 
-/*
-========================================
-HUD
-========================================
-*/
+/* =========================================
+   HUD
+========================================= */
 
 function updateHUD() {
 
@@ -1204,26 +1390,315 @@ function updateHUD() {
 
 
   document
+    .getElementById("hudMoney")
+    .textContent =
+    "$" +
+    money.toFixed(2);
+
+
+  document
     .getElementById("health")
     .style.width =
-    player.hp +
+    (
+      player.hp /
+      player.maxHp *
+      100
+    ) +
     "%";
 
 
   document
     .getElementById("shield")
     .style.width =
-    player.shield +
+    (
+      player.shield /
+      player.maxShield *
+      100
+    ) +
     "%";
 
 }
 
 
-/*
-========================================
-BACKGROUND
-========================================
-*/
+/* =========================================
+   UPGRADE MENU
+========================================= */
+
+function openUpgrades() {
+
+  running = false;
+
+  const card =
+    document.getElementById(
+      "card"
+    );
+
+
+  card.innerHTML = `
+
+    <h1>UPGRADES</h1>
+
+    <p>
+      Money:
+      <span class="money">
+        $${money.toFixed(2)}
+      </span>
+    </p>
+
+
+    <div class="upgrade">
+
+      <div class="upgrade-info">
+
+        <div class="upgrade-name">
+          ⚡ Faster Shooting
+        </div>
+
+        <div class="upgrade-desc">
+          Fire your lasers faster.
+        </div>
+
+        <div class="upgrade-level">
+          Level ${upgrades.fireRate.level}
+        </div>
+
+      </div>
+
+      <button
+        onclick="buyUpgrade('fireRate')"
+        id="buy-fireRate"
+      >
+        BUY
+      </button>
+
+    </div>
+
+
+    <div class="upgrade">
+
+      <div class="upgrade-info">
+
+        <div class="upgrade-name">
+          💥 Weapon Damage
+        </div>
+
+        <div class="upgrade-desc">
+          Each shot does more damage.
+        </div>
+
+        <div class="upgrade-level">
+          Level ${upgrades.damage.level}
+        </div>
+
+      </div>
+
+      <button
+        onclick="buyUpgrade('damage')"
+        id="buy-damage"
+      >
+        BUY
+      </button>
+
+    </div>
+
+
+    <div class="upgrade">
+
+      <div class="upgrade-info">
+
+        <div class="upgrade-name">
+          🛡️ Shield
+        </div>
+
+        <div class="upgrade-desc">
+          Increase maximum shield.
+        </div>
+
+        <div class="upgrade-level">
+          Level ${upgrades.shield.level}
+        </div>
+
+      </div>
+
+      <button
+        onclick="buyUpgrade('shield')"
+        id="buy-shield"
+      >
+        BUY
+      </button>
+
+    </div>
+
+
+    <div class="upgrade">
+
+      <div class="upgrade-info">
+
+        <div class="upgrade-name">
+          ❤️ Hull
+        </div>
+
+        <div class="upgrade-desc">
+          Increase maximum health.
+        </div>
+
+        <div class="upgrade-level">
+          Level ${upgrades.hull.level}
+        </div>
+
+      </div>
+
+      <button
+        onclick="buyUpgrade('hull')"
+        id="buy-hull"
+      >
+        BUY
+      </button>
+
+    </div>
+
+
+    <div class="upgrade">
+
+      <div class="upgrade-info">
+
+        <div class="upgrade-name">
+          🚀 Engine
+        </div>
+
+        <div class="upgrade-desc">
+          Move faster side-to-side.
+        </div>
+
+        <div class="upgrade-level">
+          Level ${upgrades.speed.level}
+        </div>
+
+      </div>
+
+      <button
+        onclick="buyUpgrade('speed')"
+        id="buy-speed"
+      >
+        BUY
+      </button>
+
+    </div>
+
+
+    <button
+      onclick="closeUpgrades()"
+    >
+      BACK
+    </button>
+
+  `;
+
+
+  document
+    .getElementById("screen")
+    .classList
+    .remove("hidden");
+
+
+  updateUpgradeButtons();
+
+}
+
+
+/* =========================================
+   BUY UPGRADE
+========================================= */
+
+function buyUpgrade(type) {
+
+  const cost =
+    upgradeCost(type);
+
+
+  if (
+    money < cost
+  ) {
+
+    return;
+
+  }
+
+
+  money -=
+    cost;
+
+
+  upgrades[type].level++;
+
+
+  applyUpgrades();
+
+
+  updateUpgradeButtons();
+
+
+  openUpgrades();
+
+}
+
+
+/* =========================================
+   UPGRADE BUTTONS
+========================================= */
+
+function updateUpgradeButtons() {
+
+  for (
+    const type of Object.keys(
+      upgrades
+    )
+  ) {
+
+    const button =
+      document.getElementById(
+        "buy-" + type
+      );
+
+
+    if (!button)
+      continue;
+
+
+    const cost =
+      upgradeCost(type);
+
+
+    button.textContent =
+      "$" +
+      cost.toFixed(2);
+
+
+    button.disabled =
+      money < cost;
+
+  }
+
+}
+
+
+/* =========================================
+   CLOSE UPGRADES
+========================================= */
+
+function closeUpgrades() {
+
+  document
+    .getElementById("screen")
+    .classList
+    .add("hidden");
+
+}
+
+
+/* =========================================
+   BACKGROUND
+========================================= */
 
 function drawBackground() {
 
@@ -1267,10 +1742,6 @@ function drawBackground() {
     H
   );
 
-
-  /*
-  STARS
-  */
 
   for (
     const star of stars
@@ -1321,10 +1792,6 @@ function drawBackground() {
     1;
 
 
-  /*
-  LEVEL LINES
-  */
-
   ctx.strokeStyle =
     "rgba(100,100,220,.13)";
 
@@ -1354,11 +1821,9 @@ function drawBackground() {
 }
 
 
-/*
-========================================
-PLAYER
-========================================
-*/
+/* =========================================
+   PLAYER SHIP
+========================================= */
 
 function drawPlayer() {
 
@@ -1378,10 +1843,6 @@ function drawPlayer() {
   ctx.shadowColor =
     "#00c8ff";
 
-
-  /*
-  WINGS
-  */
 
   ctx.fillStyle =
     "#087dcc";
@@ -1432,10 +1893,6 @@ function drawPlayer() {
   ctx.fill();
 
 
-  /*
-  COCKPIT
-  */
-
   ctx.shadowBlur =
     12;
 
@@ -1470,10 +1927,6 @@ function drawPlayer() {
 
   ctx.fill();
 
-
-  /*
-  ENGINE
-  */
 
   ctx.shadowBlur =
     25;
@@ -1519,11 +1972,9 @@ function drawPlayer() {
 }
 
 
-/*
-========================================
-NEON ENEMY
-========================================
-*/
+/* =========================================
+   NEON ENEMY
+========================================= */
 
 function drawEnemy(
   enemy
@@ -1542,10 +1993,6 @@ function drawEnemy(
   );
 
 
-  /*
-  PULSING SCALE
-  */
-
   const pulse =
     1 +
     Math.sin(
@@ -1562,10 +2009,6 @@ function drawEnemy(
   );
 
 
-  /*
-  OUTER NEON GLOW
-  */
-
   ctx.shadowBlur =
     40;
 
@@ -1573,10 +2016,6 @@ function drawEnemy(
   ctx.shadowColor =
     c.glow;
 
-
-  /*
-  MAIN SPIKY BODY
-  */
 
   ctx.fillStyle =
     c.main;
@@ -1687,10 +2126,6 @@ function drawEnemy(
   ctx.fill();
 
 
-  /*
-  SECOND NEON LAYER
-  */
-
   ctx.shadowBlur =
     25;
 
@@ -1768,10 +2203,6 @@ function drawEnemy(
     1;
 
 
-  /*
-  WHITE HOT CORE
-  */
-
   ctx.shadowBlur =
     35;
 
@@ -1816,10 +2247,6 @@ function drawEnemy(
 
   ctx.fill();
 
-
-  /*
-  LEFT ENERGY BOLT
-  */
 
   ctx.strokeStyle =
     c.light;
@@ -1879,10 +2306,6 @@ function drawEnemy(
   ctx.stroke();
 
 
-  /*
-  RIGHT ENERGY BOLT
-  */
-
   ctx.beginPath();
 
 
@@ -1924,10 +2347,6 @@ function drawEnemy(
 
   ctx.stroke();
 
-
-  /*
-  NEON SPARKS
-  */
 
   ctx.fillStyle =
     "#ffffff";
@@ -1994,10 +2413,6 @@ function drawEnemy(
   ctx.restore();
 
 
-  /*
-  HEALTH BAR
-  */
-
   const barWidth =
     58;
 
@@ -2051,18 +2466,11 @@ function drawEnemy(
 }
 
 
-/*
-========================================
-BULLETS
-========================================
-*/
+/* =========================================
+   BULLETS
+========================================= */
 
 function drawBullets() {
-
-
-  /*
-  PLAYER LASER
-  */
 
   for (
     const shot of playerShots
@@ -2095,10 +2503,6 @@ function drawBullets() {
 
   }
 
-
-  /*
-  NEON ENEMY ENERGY SHOTS
-  */
 
   for (
     const shot of enemyShots
@@ -2138,10 +2542,6 @@ function drawBullets() {
     ctx.fill();
 
 
-    /*
-    ENERGY TRAIL
-    */
-
     ctx.strokeStyle =
       c.light;
 
@@ -2175,11 +2575,9 @@ function drawBullets() {
 }
 
 
-/*
-========================================
-PARTICLES
-========================================
-*/
+/* =========================================
+   PARTICLES
+========================================= */
 
 function drawParticles() {
 
@@ -2233,11 +2631,9 @@ function drawParticles() {
 }
 
 
-/*
-========================================
-DRAW
-========================================
-*/
+/* =========================================
+   DRAW
+========================================= */
 
 function draw() {
 
@@ -2264,16 +2660,28 @@ function draw() {
 }
 
 
-/*
-========================================
-GAME OVER
-========================================
-*/
+/* =========================================
+   GAME OVER
+========================================= */
 
 function gameOver() {
 
   running =
     false;
+
+
+  /*
+    Turn score into money.
+
+    0.05% of score
+  */
+
+  const earned =
+    scoreToMoney(score);
+
+
+  money +=
+    earned;
 
 
   document
@@ -2288,12 +2696,34 @@ function gameOver() {
 
       <h1>GAME OVER</h1>
 
-      <p>Your ship was destroyed.</p>
+      <p>
+        Your ship was destroyed.
+      </p>
 
       <p>
         Score:
         <b>${score}</b>
       </p>
+
+      <p>
+        You earned:
+        <span class="money">
+          $${earned.toFixed(2)}
+        </span>
+      </p>
+
+      <p>
+        Bank:
+        <span class="money">
+          $${money.toFixed(2)}
+        </span>
+      </p>
+
+      <button
+        onclick="openUpgrades()"
+      >
+        UPGRADES
+      </button>
 
       <button
         onclick="startGame()"
@@ -2306,11 +2736,77 @@ function gameOver() {
 }
 
 
-/*
-========================================
-GAME LOOP
-========================================
-*/
+/* =========================================
+   INITIAL SCREEN
+========================================= */
+
+function showStartScreen() {
+
+  document
+    .getElementById("screen")
+    .classList
+    .remove("hidden");
+
+
+  document
+    .getElementById("card")
+    .innerHTML = `
+
+      <h1>NEON SPACE BATTLE</h1>
+
+      <p>
+        Destroy all enemy ships.
+      </p>
+
+      <p>
+        <b>A / D</b> or
+        <b>← / →</b> to move
+      </p>
+
+      <p>
+        <b>SPACE</b> to fire
+      </p>
+
+      <p>
+        Bank:
+        <span class="money">
+          $${money.toFixed(2)}
+        </span>
+      </p>
+
+      <button
+        onclick="openUpgrades()"
+      >
+        UPGRADES
+      </button>
+
+      <button
+        onclick="startGame()"
+      >
+        START GAME
+      </button>
+
+    `;
+
+}
+
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+resize();
+
+createStars();
+
+showStartScreen();
+
+draw();
+
+
+/* =========================================
+   GAME LOOP
+========================================= */
 
 function loop(time) {
 
@@ -2344,19 +2840,6 @@ function loop(time) {
   );
 
 }
-
-
-/*
-========================================
-INITIALIZE
-========================================
-*/
-
-resize();
-
-createStars();
-
-draw();
 
 </script>
 
