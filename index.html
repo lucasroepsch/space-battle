@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Battle</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #02030a;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game {
+  position: relative;
+  width: min(1100px, 100vw);
+  height: min(700px, 100vh);
+  overflow: hidden;
+  background: #050818;
+  border: 2px solid #263b75;
+  box-shadow: 0 0 35px #101d55;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 50% 20%, #111b43, #050818 45%, #02030a);
+}
+
+#hud {
+  position: absolute;
+  top: 12px;
+  left: 15px;
+  right: 15px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  font-weight: bold;
+  text-shadow: 0 2px 4px black;
+}
+
+.panel {
+  background: rgba(4, 8, 25, .8);
+  border: 1px solid #314b91;
+  border-radius: 10px;
+  padding: 9px 12px;
+  min-width: 170px;
+}
+
+.bar {
+  height: 9px;
+  width: 150px;
+  margin-top: 5px;
+  background: #171b2d;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  transition: width .15s;
+}
+
+#hpFill {
+  background: #ff405f;
+}
+
+#shieldFill {
+  background: #36a8ff;
+}
+
+#message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  text-align: center;
+  background: rgba(2, 5, 18, .94);
+  border: 1px solid #4162ba;
+  border-radius: 18px;
+  padding: 28px 35px;
+  box-shadow: 0 0 40px rgba(45, 91, 255, .25);
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 42px;
+  letter-spacing: 3px;
+}
+
+p {
+  margin: 8px 0;
+  color: #cbd5ff;
+}
+
+button {
+  margin-top: 15px;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 24px;
+  background: #416cff;
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #6387ff;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#tip {
+  position: absolute;
+  bottom: 12px;
+  width: 100%;
+  text-align: center;
+  color: #9da9d3;
+  font-size: 13px;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<canvas id="canvas"></canvas>
+
+<div id="hud">
+
+  <div class="panel">
+    <div>LEVEL <span id="level">1</span></div>
+    <div>ENEMIES <span id="enemies">0</span></div>
+    <div>SCORE <span id="score">0</span></div>
+  </div>
+
+  <div class="panel">
+    <div>HULL</div>
+    <div class="bar">
+      <div id="hpFill" class="fill" style="width:100%"></div>
+    </div>
+
+    <div>SHIELD</div>
+    <div class="bar">
+      <div id="shieldFill" class="fill" style="width:100%"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="message">
+
+  <div class="card">
+
+    <h1>SPACE BATTLE</h1>
+
+    <p>Destroy every enemy ship to advance.</p>
+
+    <p><b>A / D</b> or <b>← / →</b> to move</p>
+
+    <p><b>SPACE</b> to fire</p>
+
+    <button id="start">START GAME</button>
+
+  </div>
+
+</div>
+
+<div id="tip">
+A/D or ←/→ = move &nbsp; • &nbsp; SPACE = shoot
+</div>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const levelText = document.getElementById("level");
+const enemyText = document.getElementById("enemies");
+const scoreText = document.getElementById("score");
+
+const hpFill = document.getElementById("hpFill");
+const shieldFill = document.getElementById("shieldFill");
+
+const message = document.getElementById("message");
+const startButton = document.getElementById("start");
+
+let W = 1100;
+let H = 700;
+
+let running = false;
+let level = 1;
+let score = 0;
+let lastTime = 0;
+
+let enemyBullets = [];
+let playerBullets = [];
+let enemies = [];
+let stars = [];
+let particles = [];
+
+const keys = {};
+
+const player = {
+
+  x: W / 2,
+  y: H - 95,
+
+  w: 48,
+  h: 42,
+
+  speed: 440,
+
+  hp: 100,
+  shield: 100,
+
+  cooldown: 0
+
+};
+
+
+function resize() {
+
+  const rect = canvas.getBoundingClientRect();
+
+  W = canvas.width = Math.max(600, Math.floor(rect.width));
+  H = canvas.height = Math.max(400, Math.floor(rect.height));
+
+  player.y = H - 85;
+
+  player.x = Math.max(
+    35,
+    Math.min(W - 35, player.x)
+  );
+
+}
+
+
+window.addEventListener("resize", resize);
+
+
+function makeStars() {
+
+  stars = [];
+
+  for (let i = 0; i < 150; i++) {
+
+    stars.push({
+
+      x: Math.random() * W,
+      y: Math.random() * H,
+
+      r: Math.random() * 1.7 + .3,
+
+      speed: Math.random() * 35 + 10
+
+    });
+
+  }
+
+}
+
+
+function createEnemies() {
+
+  enemies = [];
+
+  const count = Math.min(3 + level * 2, 20);
+
+  const rows = Math.ceil(count / 6);
+  const cols = Math.min(6, count);
+
+  for (let i = 0; i < count; i++) {
+
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+
+    const spacing =
+      Math.min(125, W / (cols + 1));
+
+    const baseX =
+      W / 2 +
+      (col - (cols - 1) / 2) * spacing;
+
+    const baseY =
+      110 + row * 70;
+
+    const hp =
+      1 + Math.floor((level - 1) / 2);
+
+    enemies.push({
+
+      x: baseX,
+      baseX: baseX,
+
+      y: baseY,
+
+      w: 46,
+      h: 34,
+
+      hp: hp,
+      maxHp: hp,
+
+      phase: Math.random() * Math.PI * 2,
+
+      amplitude:
+        Math.min(100 + level * 5, W * .22),
+
+      speed:
+        .8 +
+        Math.random() * .7 +
+        level * .04,
+
+      fireTimer:
+        .6 + Math.random() * 2,
+
+      fireRate:
+        Math.max(.4, 1.7 - level * .07)
+
+    });
+
+  }
+
+}
+
+
+function resetGame() {
+
+  level = 1;
+  score = 0;
+
+  player.hp = 100;
+  player.shield = 100;
+
+  player.x = W / 2;
+
+  playerBullets = [];
+  enemyBullets = [];
+  particles = [];
+
+  createEnemies();
+
+  updateHUD();
+
+}
+
+
+function startGame() {
+
+  resize();
+
+  resetGame();
+
+  makeStars();
+
+  running = true;
+
+  message.classList.add("hidden");
+
+  lastTime = performance.now();
+
+  requestAnimationFrame(loop);
+
+}
+
+
+startButton.addEventListener(
+  "click",
+  startGame
+);
+
+
+window.addEventListener("keydown", e => {
+
+  keys[e.key.toLowerCase()] = true;
+
+  if (
+    [
+      "arrowleft",
+      "arrowright",
+      " ",
+      "a",
+      "d"
+    ].includes(e.key.toLowerCase())
+  ) {
+
+    e.preventDefault();
+
+  }
+
+  if (e.code === "Space") {
+
+    keys.space = true;
+
+  }
+
+});
+
+
+window.addEventListener("keyup", e => {
+
+  keys[e.key.toLowerCase()] = false;
+
+  if (e.code === "Space") {
+
+    keys.space = false;
+
+  }
+
+});
+
+
+function shootPlayer() {
+
+  if (player.cooldown > 0) return;
+
+  playerBullets.push({
+
+    x: player.x,
+    y: player.y - 25,
+
+    vy: -650,
+
+    r: 4,
+
+    damage: 1
+
+  });
+
+  player.cooldown = .18;
+
+}
+
+
+function enemyShoot(enemy) {
+
+  enemyBullets.push({
+
+    x: enemy.x,
+    y: enemy.y + 20,
+
+    vy: 260 + level * 12,
+
+    r: 5,
+
+    damage:
+      10 + Math.min(level * 1.2, 12)
+
+  });
+
+}
+
+
+function damagePlayer(amount) {
+
+  if (player.shield > 0) {
+
+    const absorbed =
+      Math.min(player.shield, amount);
+
+    player.shield -= absorbed;
+
+    amount -= absorbed;
+
+  }
+
+  player.hp -= amount;
+
+  burst(
+    player.x,
+    player.y,
+    8,
+    "#55b9ff"
+  );
+
+  if (player.hp <= 0) {
+
+    player.hp = 0;
+
+    running = false;
+
+    showEnd(false);
+
+  }
+
+}
+
+
+function burst(x, y, amount, color) {
+
+  for (let i = 0; i < amount; i++) {
+
+    particles.push({
+
+      x: x,
+      y: y,
+
+      vx:
+        (Math.random() - .5) * 220,
+
+      vy:
+        (Math.random() - .5) * 220,
+
+      life:
+        .35 + Math.random() * .45,
+
+      color: color
+
+    });
+
+  }
+
+}
+
+
+function nextLevel() {
+
+  level++;
+
+  player.hp =
+    Math.min(100, player.hp + 12);
+
+  player.shield =
+    Math.min(100, player.shield + 25);
+
+  createEnemies();
+
+  updateHUD();
+
+}
+
+
+function update(dt) {
+
+  /*
+    PLAYER MOVEMENT
+
+    Player stays on the same
+    horizontal level.
+  */
+
+  let dir = 0;
+
+  if (
+    keys["a"] ||
+    keys["arrowleft"]
+  ) {
+
+    dir--;
+
+  }
+
+  if (
+    keys["d"] ||
+    keys["arrowright"]
+  ) {
+
+    dir++;
+
+  }
+
+  player.x +=
+    dir * player.speed * dt;
+
+  player.x =
+    Math.max(
+      30,
+      Math.min(W - 30, player.x)
+    );
+
+
+  /*
+    SHOOTING
+  */
+
+  if (keys.space) {
+
+    shootPlayer();
+
+  }
+
+  player.cooldown =
+    Math.max(
+      0,
+      player.cooldown - dt
+    );
+
+
+  /*
+    ENEMY MOVEMENT
+
+    Enemies stay on their
+    horizontal level and move
+    side-to-side.
+  */
+
+  for (const enemy of enemies) {
+
+    enemy.x =
+      enemy.baseX +
+      Math.sin(
+        performance.now() *
+        0.001 *
+        enemy.speed +
+        enemy.phase
+      ) *
+      enemy.amplitude;
+
+    enemy.x =
+      Math.max(
+        30,
+        Math.min(W - 30, enemy.x)
+      );
+
+
+    /*
+      ENEMY SHOOTING
+    */
+
+    enemy.fireTimer -= dt;
+
+    if (enemy.fireTimer <= 0) {
+
+      enemyShoot(enemy);
+
+      enemy.fireTimer =
+        enemy.fireRate +
+        Math.random() * .9;
+
+    }
+
+  }
+
+
+  /*
+    PLAYER BULLETS
+  */
+
+  for (const bullet of playerBullets) {
+
+    bullet.y +=
+      bullet.vy * dt;
+
+  }
+
+  playerBullets =
+    playerBullets.filter(
+      b => b.y > -20
+    );
+
+
+  /*
+    ENEMY BULLETS
+  */
+
+  for (const bullet of enemyBullets) {
+
+    bullet.y +=
+      bullet.vy * dt;
+
+  }
+
+  enemyBullets =
+    enemyBullets.filter(
+      b => b.y < H + 20
+    );
+
+
+  /*
+    PLAYER BULLETS HIT ENEMIES
+  */
+
+  for (const bullet of playerBullets) {
+
+    for (const enemy of enemies) {
+
+      if (
+        !enemy.dead &&
+        Math.abs(
+          bullet.x - enemy.x
+        ) < 27 &&
+        Math.abs(
+          bullet.y - enemy.y
+        ) < 23
+      ) {
+
+        bullet.dead = true;
+
+        enemy.hp -= bullet.damage;
+
+        burst(
+          bullet.x,
+          bullet.y,
+          4,
+          "#7fd7ff"
+        );
+
+
+        if (enemy.hp <= 0) {
+
+          enemy.dead = true;
+
+          score +=
+            100 * level;
+
+          burst(
+            enemy.x,
+            enemy.y,
+            22,
+            "#ff5b75"
+          );
+
+        }
+
+        break;
+
+      }
+
+    }
+
+  }
+
+
+  playerBullets =
+    playerBullets.filter(
+      b => !b.dead
+    );
+
+  enemies =
+    enemies.filter(
+      e => !e.dead
+    );
+
+
+  /*
+    ENEMY BULLETS HIT PLAYER
+  */
+
+  for (const bullet of enemyBullets) {
+
+    if (
+      Math.abs(
+        bullet.x - player.x
+      ) < 28 &&
+      Math.abs(
+        bullet.y - player.y
+      ) < 25
+    ) {
+
+      bullet.dead = true;
+
+      damagePlayer(
+        bullet.damage
+      );
+
+    }
+
+  }
+
+
+  enemyBullets =
+    enemyBullets.filter(
+      b => !b.dead
+    );
+
+
+  /*
+    EXPLOSION PARTICLES
+  */
+
+  for (const particle of particles) {
+
+    particle.x +=
+      particle.vx * dt;
+
+    particle.y +=
+      particle.vy * dt;
+
+    particle.life -= dt;
+
+  }
+
+  particles =
+    particles.filter(
+      p => p.life > 0
+    );
+
+
+  /*
+    NEXT LEVEL
+  */
+
+  if (
+    enemies.length === 0 &&
+    running
+  ) {
+
+    nextLevel();
+
+  }
+
+
+  /*
+    SHIELD RECHARGES
+  */
+
+  player.shield =
+    Math.min(
+      100,
+      player.shield + dt * 3
+    );
+
+
+  updateHUD();
+
+}
+
+
+function updateHUD() {
+
+  levelText.textContent =
+    level;
+
+  enemyText.textContent =
+    enemies.length;
+
+  scoreText.textContent =
+    score;
+
+  hpFill.style.width =
+    player.hp + "%";
+
+  shieldFill.style.width =
+    player.shield + "%";
+
+}
+
+
+function drawShip(x, y, playerShip) {
+
+  ctx.save();
+
+  ctx.translate(x, y);
+
+
+  /*
+    PLAYER SHIP
+  */
+
+  if (playerShip) {
+
+    ctx.fillStyle = "#54b8ff";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, -28);
+    ctx.lineTo(-25, 23);
+    ctx.lineTo(0, 14);
+    ctx.lineTo(25, 23);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle = "#dff6ff";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, -17);
+    ctx.lineTo(-8, 7);
+    ctx.lineTo(8, 7);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle = "#ffdb45";
+
+    ctx.beginPath();
+
+    ctx.moveTo(-10, 22);
+    ctx.lineTo(0, 38);
+    ctx.lineTo(10, 22);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+  }
+
+
+  /*
+    ENEMY SHIP
+  */
+
+  else {
+
+    ctx.fillStyle = "#ff4967";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, 27);
+    ctx.lineTo(-25, -20);
+    ctx.lineTo(-7, -13);
+    ctx.lineTo(0, -29);
+    ctx.lineTo(7, -13);
+    ctx.lineTo(25, -20);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle = "#ffd1d8";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, 16);
+    ctx.lineTo(-8, -8);
+    ctx.lineTo(8, -8);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+  }
+
+
+  ctx.restore();
+
+}
+
+
+function draw() {
+
+  ctx.clearRect(
+    0,
+    0,
+    W,
+    H
+  );
+
+
+  /*
+    STARS
+  */
+
+  ctx.fillStyle = "#fff";
+
+  for (const star of stars) {
+
+    ctx.globalAlpha =
+      .35 + star.r / 3;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      star.x,
+      star.y,
+      star.r,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+  }
+
+  ctx.globalAlpha = 1;
+
+
+  /*
+    HORIZONTAL LEVEL LINES
+  */
+
+  ctx.strokeStyle =
+    "rgba(75,110,190,.12)";
+
+  ctx.setLineDash([
+    8,
+    14
+  ]);
+
+  for (
+    let y = 70;
+    y < H;
+    y += 90
+  ) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+
+    ctx.stroke();
+
+  }
+
+  ctx.setLineDash([]);
+
+
+  /*
+    ENEMY SHIPS
+  */
+
+  for (const enemy of enemies) {
+
+    drawShip(
+      enemy.x,
+      enemy.y,
+      false
+    );
+
+
+    /*
+      ENEMY HEALTH BAR
+    */
+
+    ctx.fillStyle =
+      "rgba(0,0,0,.5)";
+
+    ctx.fillRect(
+      enemy.x - 22,
+      enemy.y - 38,
+      44,
+      5
+    );
+
+
+    ctx.fillStyle =
+      "#ff4967";
+
+    ctx.fillRect(
+      enemy.x - 22,
+      enemy.y - 38,
+      44 *
+      enemy.hp /
+      enemy.maxHp,
+      5
+    );
+
+  }
+
+
+  /*
+    PLAYER
+  */
+
+  drawShip(
+    player.x,
+    player.y,
+    true
+  );
+
+
+  /*
+    PLAYER BULLETS
+  */
+
+  for (const bullet of playerBullets) {
+
+    ctx.fillStyle =
+      "#66d9ff";
+
+    ctx.shadowBlur = 12;
+    ctx.shadowColor =
+      "#66d9ff";
+
+    ctx.fillRect(
+      bullet.x - 2,
+      bullet.y - 10,
+      4,
+      18
+    );
+
+    ctx.shadowBlur = 0;
+
+  }
+
+
+  /*
+    ENEMY BULLETS
+  */
+
+  for (const bullet of enemyBullets) {
+
+    ctx.fillStyle =
+      "#ff506e";
+
+    ctx.shadowBlur = 12;
+
+    ctx.shadowColor =
+      "#ff506e";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      bullet.x,
+      bullet.y,
+      bullet.r,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+  }
+
+
+  /*
+    EXPLOSIONS
+  */
+
+  for (const particle of particles) {
+
+    ctx.globalAlpha =
+      Math.max(
+        0,
+        particle.life
+      );
+
+    ctx.fillStyle =
+      particle.color;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      particle.x,
+      particle.y,
+      3,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+  }
+
+  ctx.globalAlpha = 1;
+
+}
+
+
+function showEnd(won) {
+
+  message.classList.remove(
+    "hidden"
+  );
+
+
+  message.querySelector(
+    ".card"
+  ).innerHTML = `
+
+    <h1>
+      ${won ? "VICTORY!" : "GAME OVER"}
+    </h1>
+
+    <p>
+      ${
+        won
+        ? "You cleared the galaxy!"
+        : "Your ship was destroyed."
+      }
+    </p>
+
+    <p>
+      Score:
+      <b>${score}</b>
+    </p>
+
+    <button id="restart">
+      ${won ? "PLAY AGAIN" : "TRY AGAIN"}
+    </button>
+
+  `;
+
+
+  document.getElementById(
+    "restart"
+  ).onclick = startGame;
+
+}
+
+
+function loop(now) {
+
+  if (!running) return;
+
+
+  const dt =
+    Math.min(
+      (now - lastTime) / 1000,
+      .033
+    );
+
+  lastTime = now;
+
+
+  update(dt);
+
+  draw();
+
+
+  if (running) {
+
+    requestAnimationFrame(
+      loop
+    );
+
+  }
+
+}
+
+
+resize();
+makeStars();
+
+</script>
+
+</body>
+</html>
