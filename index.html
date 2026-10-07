@@ -2,249 +2,162 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Neon Space Battle</title>
 
 <style>
-* {
-    box-sizing: border-box;
+*{box-sizing:border-box}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:#02030a;color:white;font-family:Arial,sans-serif
+}
+canvas{display:block;width:100vw;height:100vh}
+
+#ui{
+  position:fixed;top:12px;left:12px;right:12px;
+  display:none;justify-content:space-between;
+  z-index:5;pointer-events:none
+}
+.panel,.card{
+  background:rgba(0,5,20,.95);
+  border:1px solid #00eaff;
+  border-radius:12px;
+  box-shadow:0 0 18px #00eaff33
+}
+.panel{padding:10px 14px}
+.stat{font-weight:bold;margin:4px 0}
+
+.bar{
+  width:210px;height:12px;background:#111;
+  border:1px solid #555;border-radius:10px;overflow:hidden
+}
+.fill{height:100%;width:100%}
+#hpFill{background:#ff174f;box-shadow:0 0 10px #ff174f}
+#shieldFill{background:#00eaff;box-shadow:0 0 10px #00eaff}
+
+.screen{
+  position:fixed;inset:0;z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,10,.92)
+}
+.card{
+  width:min(600px,92vw);
+  max-height:90vh;
+  overflow-y:auto;
+  padding:28px;
+  text-align:center;
+  border-width:2px
 }
 
-html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #02030a;
-    font-family: Arial, sans-serif;
-    color: white;
+h1{
+  margin:0 0 10px;
+  font-size:clamp(42px,8vw,72px);
+  color:#00eaff;
+  text-shadow:0 0 10px #00eaff,0 0 30px #00eaff
+}
+h2{color:#00eaff}
+
+button{
+  padding:12px 24px;
+  margin:7px;
+  border:2px solid #00eaff;
+  border-radius:10px;
+  background:#00eaff12;
+  color:#00eaff;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer
+}
+button:hover{
+  background:#00eaff33;
+  box-shadow:0 0 18px #00eaff
 }
 
-canvas {
-    display: block;
-    width: 100vw;
-    height: 100vh;
+.money{
+  color:#ffee00;
+  font-size:24px;
+  font-weight:bold;
+  text-shadow:0 0 10px #ffee00;
+  margin:12px
+}
+.controls{color:#aaa;line-height:1.7;font-size:14px}
+
+.upgrade{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  text-align:left;
+  gap:10px;
+  padding:12px;
+  margin:9px 0;
+  border:1px solid #00eaff44;
+  border-radius:10px
+}
+.upgradeName{font-size:17px;font-weight:bold}
+.upgradeDesc{color:#888;font-size:13px}
+.upgradeLevel{color:#00eaff;font-size:13px;margin-top:4px}
+
+#bossUI{
+  position:fixed;
+  top:15px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(500px,70vw);
+  display:none;
+  z-index:7;
+  text-align:center;
+  pointer-events:none
+}
+#bossTitle{
+  color:#ff174f;
+  font-size:25px;
+  font-weight:bold;
+  text-shadow:0 0 15px #ff174f
+}
+#bossBar{
+  height:18px;
+  border:2px solid #ff174f;
+  border-radius:12px;
+  overflow:hidden;
+  background:#100006
+}
+#bossFill{
+  width:100%;
+  height:100%;
+  background:#ff174f;
+  box-shadow:0 0 15px #ff174f
 }
 
-#ui {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    display: none;
-    justify-content: space-between;
-    z-index: 5;
-    pointer-events: none;
+#banner{
+  position:fixed;
+  top:42%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  z-index:15;
+  display:none;
+  text-align:center;
+  pointer-events:none
 }
-
-.panel {
-    background: rgba(0, 0, 15, .75);
-    border: 1px solid #00eaff;
-    border-radius: 10px;
-    padding: 10px 14px;
-    box-shadow: 0 0 15px rgba(0,234,255,.25);
+#bannerBig{
+  font-size:clamp(45px,9vw,90px);
+  color:#ff174f;
+  font-weight:900;
+  text-shadow:0 0 10px #ff174f,0 0 30px #ff174f
 }
+#bannerSmall{font-size:20px}
 
-.stat {
-    font-weight: bold;
-    margin: 4px 0;
-}
-
-.bar {
-    width: 210px;
-    height: 12px;
-    background: #111;
-    border: 1px solid #555;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.fill {
-    height: 100%;
-    width: 100%;
-}
-
-#hpFill {
-    background: #ff174f;
-    box-shadow: 0 0 10px #ff174f;
-}
-
-#shieldFill {
-    background: #00eaff;
-    box-shadow: 0 0 10px #00eaff;
-}
-
-.screen {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: rgba(0,0,10,.92);
-}
-
-.card {
-    width: min(600px, 92vw);
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 30px;
-    text-align: center;
-    border: 2px solid #00eaff;
-    border-radius: 20px;
-    background: rgba(0,5,20,.96);
-    box-shadow:
-        0 0 25px #00eaff55,
-        inset 0 0 30px #00eaff11;
-}
-
-h1 {
-    margin: 0 0 10px;
-    font-size: clamp(42px, 8vw, 72px);
-    color: #00eaff;
-    text-shadow:
-        0 0 10px #00eaff,
-        0 0 30px #00eaff;
-}
-
-h2 {
-    color: #00eaff;
-}
-
-button {
-    padding: 12px 25px;
-    margin: 7px;
-    border: 2px solid #00eaff;
-    border-radius: 10px;
-    background: #00eaff12;
-    color: #00eaff;
-    font-size: 17px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #00eaff33;
-    box-shadow: 0 0 18px #00eaff;
-}
-
-.money {
-    color: #ffee00;
-    font-size: 24px;
-    font-weight: bold;
-    text-shadow: 0 0 10px #ffee00;
-    margin: 12px;
-}
-
-.controls {
-    color: #aaa;
-    line-height: 1.7;
-    font-size: 14px;
-}
-
-.upgrade {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-align: left;
-    gap: 10px;
-    padding: 12px;
-    margin: 9px 0;
-    border: 1px solid #00eaff44;
-    border-radius: 10px;
-}
-
-.upgradeName {
-    font-size: 17px;
-    font-weight: bold;
-}
-
-.upgradeDesc {
-    color: #888;
-    font-size: 13px;
-}
-
-.upgradeLevel {
-    color: #00eaff;
-    font-size: 13px;
-    margin-top: 4px;
-}
-
-#bossUI {
-    position: fixed;
-    top: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(500px, 70vw);
-    display: none;
-    z-index: 7;
-    text-align: center;
-    pointer-events: none;
-}
-
-#bossTitle {
-    color: #ff174f;
-    font-size: 25px;
-    font-weight: bold;
-    text-shadow: 0 0 15px #ff174f;
-}
-
-#bossBar {
-    height: 18px;
-    border: 2px solid #ff174f;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #100006;
-}
-
-#bossFill {
-    width: 100%;
-    height: 100%;
-    background: #ff174f;
-    box-shadow: 0 0 15px #ff174f;
-}
-
-#banner {
-    position: fixed;
-    top: 42%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 15;
-    display: none;
-    text-align: center;
-    pointer-events: none;
-}
-
-#bannerBig {
-    font-size: clamp(45px, 9vw, 90px);
-    color: #ff174f;
-    font-weight: 900;
-    text-shadow:
-        0 0 10px #ff174f,
-        0 0 30px #ff174f,
-        0 0 70px #ff174f;
-}
-
-#bannerSmall {
-    font-size: 20px;
-    color: white;
-    text-shadow: 0 0 10px white;
-}
-
-#levelBanner {
-    position: fixed;
-    top: 28%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: none;
-    z-index: 12;
-    font-size: 50px;
-    font-weight: bold;
-    color: #00eaff;
-    text-shadow:
-        0 0 10px #00eaff,
-        0 0 30px #00eaff;
-    pointer-events: none;
+#levelBanner{
+  position:fixed;
+  top:28%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  display:none;
+  z-index:12;
+  font-size:50px;
+  font-weight:bold;
+  color:#00eaff;
+  text-shadow:0 0 10px #00eaff,0 0 30px #00eaff;
+  pointer-events:none
 }
 </style>
 </head>
@@ -256,281 +169,273 @@ button:hover {
 <!-- GAME UI -->
 <div id="ui">
 
-    <div class="panel">
-        <div class="stat">
-            LEVEL: <span id="level">1</span>
-        </div>
+  <div class="panel">
 
-        <div class="stat">
-            SCORE: <span id="score">0</span>
-        </div>
-
-        <div class="stat">
-            MONEY: $<span id="money">0.00</span>
-        </div>
-
-        <div class="stat">
-            HULL
-        </div>
-
-        <div class="bar">
-            <div id="hpFill" class="fill"></div>
-        </div>
-
-        <div class="stat">
-            SHIELD
-        </div>
-
-        <div class="bar">
-            <div id="shieldFill" class="fill"></div>
-        </div>
+    <div class="stat">
+      LEVEL: <span id="level">1</span>
     </div>
 
-    <div class="panel controls">
-        <b>A / D</b> or <b>← / →</b> Move<br>
-        <b>SPACE</b> Shoot
+    <div class="stat">
+      SCORE: <span id="score">0</span>
     </div>
+
+    <div class="stat">
+      MONEY: $<span id="money">0.00</span>
+    </div>
+
+    <div class="stat">HULL</div>
+    <div class="bar">
+      <div id="hpFill" class="fill"></div>
+    </div>
+
+    <div class="stat">SHIELD</div>
+    <div class="bar">
+      <div id="shieldFill" class="fill"></div>
+    </div>
+
+  </div>
+
+  <div class="panel controls">
+    <b>A / D</b> or <b>← / →</b> Move<br>
+    <b>SPACE</b> Shoot
+  </div>
 
 </div>
 
-<!-- BOSS BAR -->
+<!-- BOSS -->
 <div id="bossUI">
-    <div id="bossTitle">⚠ BOSS ⚠</div>
-    <div id="bossBar">
-        <div id="bossFill"></div>
-    </div>
+  <div id="bossTitle">⚠ BOSS ⚠</div>
+  <div id="bossBar">
+    <div id="bossFill"></div>
+  </div>
 </div>
 
-<!-- BOSS MESSAGE -->
 <div id="banner">
-    <div id="bannerBig">BOSS BATTLE</div>
-    <div id="bannerSmall">
-        ⚠ DESTROY THE ENEMY COMMANDER ⚠
-    </div>
+  <div id="bannerBig">BOSS BATTLE</div>
+  <div id="bannerSmall">
+    ⚠ DESTROY THE ENEMY COMMANDER ⚠
+  </div>
 </div>
 
 <div id="levelBanner"></div>
 
-<!-- START SCREEN -->
+<!-- START -->
 <div id="startScreen" class="screen">
 
-    <div class="card">
+  <div class="card">
 
-        <h1>SPACE BATTLE</h1>
+    <h1>SPACE BATTLE</h1>
 
-        <p class="controls">
-            Destroy the enemy fleet and survive as long as possible.
-        </p>
+    <p class="controls">
+      Destroy the enemy fleet and survive as long as possible.
+    </p>
 
-        <div class="money">
-            💰 $<span id="startMoney">0.00</span>
-        </div>
-
-        <button onclick="startGame()">
-            START GAME
-        </button>
-
-        <button onclick="openUpgrades()">
-            UPGRADES
-        </button>
-
-        <div class="controls">
-            <br>
-            A / D or Arrow Keys = Move<br>
-            Space = Shoot<br>
-            Every 2 levels = BOSS BATTLE
-        </div>
-
+    <div class="money">
+      💰 $<span id="startMoney">0.00</span>
     </div>
+
+    <div style="
+      font-size:20px;
+      color:#00eaff;
+      font-weight:bold;
+      margin:10px
+    ">
+      🏆 BEST SCORE:
+      <span id="bestScore">0</span>
+    </div>
+
+    <div class="controls">
+      BEST LEVEL:
+      <span id="bestLevel">1</span>
+    </div>
+
+    <button onclick="startGame()">
+      START GAME
+    </button>
+
+    <button onclick="openUpgrades()">
+      UPGRADES
+    </button>
+
+    <div class="controls">
+      <br>
+      A / D or Arrow Keys = Move<br>
+      Space = Shoot<br>
+      Every 2 levels = BOSS BATTLE
+    </div>
+
+  </div>
 
 </div>
 
 <!-- GAME OVER -->
-<div id="gameOverScreen" class="screen" style="display:none;">
+<div id="gameOverScreen" class="screen" style="display:none">
 
-    <div class="card">
+  <div class="card">
 
-        <h2>GAME OVER</h2>
+    <h2>GAME OVER</h2>
 
-        <p>FINAL SCORE</p>
+    <p>FINAL SCORE</p>
 
-        <div style="
-            font-size:38px;
-            color:#00eaff;
-            font-weight:bold;
-        ">
-            <span id="finalScore">0</span>
-        </div>
-
-        <p>MONEY EARNED</p>
-
-        <div class="money">
-            +$<span id="earnedMoney">0.00</span>
-        </div>
-
-        <p>TOTAL MONEY</p>
-
-        <div class="money">
-            $<span id="totalMoney">0.00</span>
-        </div>
-
-        <button onclick="startGame()">
-            PLAY AGAIN
-        </button>
-
-        <button onclick="openUpgrades()">
-            UPGRADES
-        </button>
-
+    <div style="
+      font-size:38px;
+      color:#00eaff;
+      font-weight:bold
+    ">
+      <span id="finalScore">0</span>
     </div>
+
+    <p>BEST SCORE</p>
+
+    <div style="
+      font-size:28px;
+      color:#ffee00;
+      font-weight:bold
+    ">
+      <span id="gameOverBestScore">0</span>
+    </div>
+
+    <p>MONEY EARNED</p>
+
+    <div class="money">
+      +$<span id="earnedMoney">0.00</span>
+    </div>
+
+    <p>TOTAL MONEY</p>
+
+    <div class="money">
+      $<span id="totalMoney">0.00</span>
+    </div>
+
+    <button onclick="startGame()">
+      PLAY AGAIN
+    </button>
+
+    <button onclick="openUpgrades()">
+      UPGRADES
+    </button>
+
+  </div>
 
 </div>
 
 <!-- UPGRADES -->
-<div id="upgradeScreen" class="screen" style="display:none;">
+<div id="upgradeScreen" class="screen" style="display:none">
 
-    <div class="card">
+  <div class="card">
 
-        <h2>UPGRADES</h2>
+    <h2>UPGRADES</h2>
 
-        <div class="money">
-            💰 $<span id="upgradeMoney">0.00</span>
-        </div>
-
-        <div class="upgrade">
-
-            <div>
-                <div class="upgradeName">
-                    ⚡ Faster Shooting
-                </div>
-
-                <div class="upgradeDesc">
-                    Shoot faster.
-                </div>
-
-                <div class="upgradeLevel">
-                    Level:
-                    <span id="fireLevel">0</span>
-                </div>
-            </div>
-
-            <button onclick="buyUpgrade('fire')">
-                $<span id="fireCost">2.00</span>
-            </button>
-
-        </div>
-
-        <div class="upgrade">
-
-            <div>
-                <div class="upgradeName">
-                    💥 Weapon Damage
-                </div>
-
-                <div class="upgradeDesc">
-                    Deal more damage.
-                </div>
-
-                <div class="upgradeLevel">
-                    Level:
-                    <span id="damageLevel">0</span>
-                </div>
-            </div>
-
-            <button onclick="buyUpgrade('damage')">
-                $<span id="damageCost">3.00</span>
-            </button>
-
-        </div>
-
-        <div class="upgrade">
-
-            <div>
-                <div class="upgradeName">
-                    🛡 Shield
-                </div>
-
-                <div class="upgradeDesc">
-                    More shield capacity.
-                </div>
-
-                <div class="upgradeLevel">
-                    Level:
-                    <span id="shieldLevel">0</span>
-                </div>
-            </div>
-
-            <button onclick="buyUpgrade('shield')">
-                $<span id="shieldCost">2.00</span>
-            </button>
-
-        </div>
-
-        <div class="upgrade">
-
-            <div>
-                <div class="upgradeName">
-                    ❤️ Hull
-                </div>
-
-                <div class="upgradeDesc">
-                    More hull health.
-                </div>
-
-                <div class="upgradeLevel">
-                    Level:
-                    <span id="hullLevel">0</span>
-                </div>
-            </div>
-
-            <button onclick="buyUpgrade('hull')">
-                $<span id="hullCost">2.00</span>
-            </button>
-
-        </div>
-
-        <div class="upgrade">
-
-            <div>
-                <div class="upgradeName">
-                    🚀 Engine
-                </div>
-
-                <div class="upgradeDesc">
-                    Move faster.
-                </div>
-
-                <div class="upgradeLevel">
-                    Level:
-                    <span id="speedLevel">0</span>
-                </div>
-            </div>
-
-            <button onclick="buyUpgrade('speed')">
-                $<span id="speedCost">2.00</span>
-            </button>
-
-        </div>
-
-        <button onclick="closeUpgrades()">
-            BACK
-        </button>
-
+    <div class="money">
+      💰 $<span id="upgradeMoney">0.00</span>
     </div>
+
+    <div class="upgrade">
+      <div>
+        <div class="upgradeName">
+          ⚡ Faster Shooting
+        </div>
+        <div class="upgradeDesc">
+          Shoot faster.
+        </div>
+        <div class="upgradeLevel">
+          Level: <span id="fireLevel">0</span>
+        </div>
+      </div>
+
+      <button onclick="buyUpgrade('fire')">
+        $<span id="fireCost">2.00</span>
+      </button>
+    </div>
+
+    <div class="upgrade">
+      <div>
+        <div class="upgradeName">
+          💥 Weapon Damage
+        </div>
+        <div class="upgradeDesc">
+          Deal more damage.
+        </div>
+        <div class="upgradeLevel">
+          Level: <span id="damageLevel">0</span>
+        </div>
+      </div>
+
+      <button onclick="buyUpgrade('damage')">
+        $<span id="damageCost">3.00</span>
+      </button>
+    </div>
+
+    <div class="upgrade">
+      <div>
+        <div class="upgradeName">
+          🛡 Shield
+        </div>
+        <div class="upgradeDesc">
+          More shield capacity.
+        </div>
+        <div class="upgradeLevel">
+          Level: <span id="shieldLevel">0</span>
+        </div>
+      </div>
+
+      <button onclick="buyUpgrade('shield')">
+        $<span id="shieldCost">2.00</span>
+      </button>
+    </div>
+
+    <div class="upgrade">
+      <div>
+        <div class="upgradeName">
+          ❤️ Hull
+        </div>
+        <div class="upgradeDesc">
+          More hull health.
+        </div>
+        <div class="upgradeLevel">
+          Level: <span id="hullLevel">0</span>
+        </div>
+      </div>
+
+      <button onclick="buyUpgrade('hull')">
+        $<span id="hullCost">2.00</span>
+      </button>
+    </div>
+
+    <div class="upgrade">
+      <div>
+        <div class="upgradeName">
+          🚀 Engine
+        </div>
+        <div class="upgradeDesc">
+          Move faster.
+        </div>
+        <div class="upgradeLevel">
+          Level: <span id="speedLevel">0</span>
+        </div>
+      </div>
+
+      <button onclick="buyUpgrade('speed')">
+        $<span id="speedCost">2.00</span>
+      </button>
+    </div>
+
+    <button onclick="closeUpgrades()">
+      BACK
+    </button>
+
+  </div>
 
 </div>
 
 <script>
 
-/* =========================================================
+/* =====================================================
    CANVAS
-========================================================= */
+===================================================== */
 
-const canvas =
-    document.getElementById("game");
-
-const ctx =
-    canvas.getContext("2d");
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
 let W = innerWidth;
 let H = innerHeight;
@@ -538,27 +443,19 @@ let H = innerHeight;
 canvas.width = W;
 canvas.height = H;
 
-window.addEventListener("resize", () => {
 
-    W = innerWidth;
-    H = innerHeight;
-
-    canvas.width = W;
-    canvas.height = H;
-
-    player.y = H - 90;
-});
-
-
-/* =========================================================
-   GAME VARIABLES
-========================================================= */
+/* =====================================================
+   GAME DATA
+===================================================== */
 
 let running = false;
 
 let level = 1;
 let score = 0;
 let money = 0;
+
+let bestScore = 0;
+let bestLevel = 1;
 
 let enemies = [];
 let playerShots = [];
@@ -569,2549 +466,2404 @@ let stars = [];
 let shooting = false;
 
 let lastTime = performance.now();
-
 let bannerTimer = 0;
 let levelTimer = 0;
 
 
-/* =========================================================
+/* =====================================================
+   SAVE SYSTEM
+===================================================== */
+
+const SAVE_KEY = "neonSpaceBattleSave";
+
+
+function saveGame(){
+
+  const data = {
+
+    bestScore: bestScore,
+
+    bestLevel: bestLevel,
+
+    money: money,
+
+    upgrades: {
+
+      fire: upgrades.fire.level,
+
+      damage: upgrades.damage.level,
+
+      shield: upgrades.shield.level,
+
+      hull: upgrades.hull.level,
+
+      speed: upgrades.speed.level
+
+    }
+
+  };
+
+  try{
+
+    localStorage.setItem(
+      SAVE_KEY,
+      JSON.stringify(data)
+    );
+
+  }catch(error){
+
+    console.log("Could not save game.");
+
+  }
+
+}
+
+
+function loadGame(){
+
+  try{
+
+    const saved =
+      localStorage.getItem(SAVE_KEY);
+
+    if(!saved)
+      return;
+
+    const data =
+      JSON.parse(saved);
+
+    bestScore =
+      Number(data.bestScore) || 0;
+
+    bestLevel =
+      Number(data.bestLevel) || 1;
+
+    money =
+      Number(data.money) || 0;
+
+    if(data.upgrades){
+
+      upgrades.fire.level =
+        Number(data.upgrades.fire) || 0;
+
+      upgrades.damage.level =
+        Number(data.upgrades.damage) || 0;
+
+      upgrades.shield.level =
+        Number(data.upgrades.shield) || 0;
+
+      upgrades.hull.level =
+        Number(data.upgrades.hull) || 0;
+
+      upgrades.speed.level =
+        Number(data.upgrades.speed) || 0;
+
+    }
+
+  }catch(error){
+
+    console.log("Could not load saved game.");
+
+  }
+
+}
+
+
+/* =====================================================
    KEYS
-========================================================= */
+===================================================== */
 
 const keys = {};
 
 
-/* =========================================================
-   NEON COLORS
-========================================================= */
+/* =====================================================
+   COLORS
+===================================================== */
 
 const neonColors = [
 
-    "#ff174f",
-    "#ff6d00",
-    "#ffee00",
-    "#00ff66",
-    "#00eaff",
-    "#1677ff",
-    "#9b30ff",
-    "#ff22cc"
+  "#ff174f",
+  "#ff6d00",
+  "#ffee00",
+  "#00ff66",
+  "#00eaff",
+  "#1677ff",
+  "#9b30ff",
+  "#ff22cc"
 
 ];
 
 
-/* =========================================================
+/* =====================================================
    UPGRADES
-========================================================= */
+===================================================== */
 
 const upgrades = {
 
-    fire: {
-        level: 0,
-        baseCost: 2
-    },
+  fire:{
+    level:0,
+    baseCost:2
+  },
 
-    damage: {
-        level: 0,
-        baseCost: 3
-    },
+  damage:{
+    level:0,
+    baseCost:3
+  },
 
-    shield: {
-        level: 0,
-        baseCost: 2
-    },
+  shield:{
+    level:0,
+    baseCost:2
+  },
 
-    hull: {
-        level: 0,
-        baseCost: 2
-    },
+  hull:{
+    level:0,
+    baseCost:2
+  },
 
-    speed: {
-        level: 0,
-        baseCost: 2
-    }
+  speed:{
+    level:0,
+    baseCost:2
+  }
 
 };
 
 
-function upgradeCost(type) {
+function upgradeCost(type){
 
-    return upgrades[type].baseCost *
-        Math.pow(
-            1.55,
-            upgrades[type].level
-        );
-
-}
-
-
-function buyUpgrade(type) {
-
-    const cost =
-        upgradeCost(type);
-
-    if (money < cost) {
-
-        alert("Not enough money!");
-
-        return;
-    }
-
-    money -= cost;
-
-    upgrades[type].level++;
-
-    updateUpgradeUI();
-    updateMoneyUI();
+  return upgrades[type].baseCost *
+    Math.pow(
+      1.55,
+      upgrades[type].level
+    );
 
 }
 
 
-/* =========================================================
+function buyUpgrade(type){
+
+  const cost =
+    upgradeCost(type);
+
+  if(money < cost){
+
+    alert("Not enough money!");
+
+    return;
+
+  }
+
+  money -= cost;
+
+  upgrades[type].level++;
+
+  saveGame();
+
+  applyUpgrades();
+
+  updateUpgradeUI();
+
+  updateMoneyUI();
+
+}
+
+
+/* =====================================================
    PLAYER
-========================================================= */
+===================================================== */
 
 const player = {
 
-    x: W / 2,
-    y: H - 90,
+  x:W / 2,
 
-    width: 44,
-    height: 55,
+  y:H - 90,
 
-    speed: 430,
+  width:44,
 
-    hp: 100,
-    maxHp: 100,
+  height:55,
 
-    shield: 100,
-    maxShield: 100,
+  speed:430,
 
-    damage: 10,
+  hp:100,
 
-    fireRate: .20,
+  maxHp:100,
 
-    lastHit: -10
+  shield:100,
+
+  maxShield:100,
+
+  damage:10,
+
+  fireRate:.20,
+
+  lastShot:-1,
+
+  lastHit:-10
 
 };
 
 
-function applyUpgrades() {
+function applyUpgrades(){
 
-    player.maxHp =
-        100 +
-        upgrades.hull.level * 20;
+  player.maxHp =
+    100 +
+    upgrades.hull.level * 20;
 
-    player.maxShield =
-        100 +
-        upgrades.shield.level * 20;
+  player.maxShield =
+    100 +
+    upgrades.shield.level * 20;
 
-    player.speed =
-        430 +
-        upgrades.speed.level * 60;
+  player.speed =
+    430 +
+    upgrades.speed.level * 60;
 
-    player.damage =
-        10 +
-        upgrades.damage.level;
+  player.damage =
+    10 +
+    upgrades.damage.level;
 
-    player.fireRate =
-        Math.max(
-            .06,
-            .20 -
-            upgrades.fire.level * .025
-        );
-
-}
-
-
-function resetPlayer() {
-
-    applyUpgrades();
-
-    player.x = W / 2;
-    player.y = H - 90;
-
-    player.hp =
-        player.maxHp;
-
-    player.shield =
-        player.maxShield;
+  player.fireRate =
+    Math.max(
+      .06,
+      .20 -
+      upgrades.fire.level * .025
+    );
 
 }
 
 
-/* =========================================================
+function resetPlayer(){
+
+  applyUpgrades();
+
+  player.x =
+    W / 2;
+
+  player.y =
+    H - 90;
+
+  player.hp =
+    player.maxHp;
+
+  player.shield =
+    player.maxShield;
+
+  player.lastShot = -1;
+
+}
+
+
+/* =====================================================
    STARS
-========================================================= */
+===================================================== */
 
-function createStars() {
+function createStars(){
 
-    stars = [];
+  stars = [];
 
-    for (let i = 0; i < 180; i++) {
+  for(let i=0;i<180;i++){
 
-        stars.push({
+    stars.push({
 
-            x: Math.random() * W,
+      x:Math.random()*W,
 
-            y: Math.random() * H,
+      y:Math.random()*H,
 
-            size:
-                Math.random() * 2 + .3,
+      size:Math.random()*2+.3,
 
-            speed:
-                Math.random() * 40 + 10
+      speed:Math.random()*40+10
 
-        });
+    });
+
+  }
+
+}
+
+
+function updateStars(dt){
+
+  for(const star of stars){
+
+    star.y +=
+      star.speed * dt;
+
+    if(star.y > H){
+
+      star.y = 0;
+
+      star.x =
+        Math.random()*W;
 
     }
 
+  }
+
 }
+
+
+function drawStars(){
+
+  for(const star of stars){
+
+    ctx.fillStyle =
+      "white";
+
+    ctx.globalAlpha =
+      Math.random()*.5+.3;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      star.x,
+      star.y,
+      star.size,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+  ctx.globalAlpha = 1;
+
+}
+
 
 createStars();
 
 
-function updateStars(dt) {
+/* =====================================================
+   ENEMIES
+===================================================== */
 
-    for (const star of stars) {
+function createEnemies(){
 
-        star.y +=
-            star.speed * dt;
+  enemies = [];
 
-        if (star.y > H) {
+  if(level % 2 === 0){
 
-            star.y = 0;
-
-            star.x =
-                Math.random() * W;
-
-        }
-
-    }
-
-}
-
-
-function drawStars() {
-
-    for (const star of stars) {
-
-        ctx.fillStyle = "white";
-
-        ctx.globalAlpha =
-            Math.random() * .5 + .3;
-
-        ctx.beginPath();
-
-        ctx.arc(
-            star.x,
-            star.y,
-            star.size,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-
-    }
-
-    ctx.globalAlpha = 1;
-
-}
-
-
-/* =========================================================
-   CREATE NORMAL ENEMIES
-========================================================= */
-
-function createEnemies() {
-
-    enemies = [];
-
-    /*
-       EVEN LEVEL = BOSS
-    */
-
-    if (level % 2 === 0) {
-
-        createBoss();
-
-        showBoss();
-
-        return;
-    }
-
-
-    /*
-       NORMAL ENEMIES
-    */
-
-    const count =
-        Math.min(
-            4 + level * 2,
-            24
-        );
-
-
-    for (let i = 0; i < count; i++) {
-
-        const color =
-            neonColors[
-                (i + level) %
-                neonColors.length
-            ];
-
-
-        const column =
-            i % 8;
-
-        const row =
-            Math.floor(i / 8);
-
-
-        const spacing =
-            W / 8;
-
-
-        const x =
-            spacing * column +
-            spacing / 2;
-
-
-        const hp =
-            25 +
-            level * 8;
-
-
-        enemies.push({
-
-            boss: false,
-
-            x: x,
-
-            baseX: x,
-
-            y:
-                120 +
-                row * 85,
-
-            width: 48,
-
-            height: 40,
-
-            hp: hp,
-
-            maxHp: hp,
-
-            color: color,
-
-            phase:
-                Math.random() *
-                Math.PI * 2,
-
-            movementSpeed:
-                .7 +
-                level * .025,
-
-            movementWidth:
-                Math.min(
-                    100,
-                    45 + level * 4
-                ),
-
-            shootTimer:
-                Math.random() * 2,
-
-            shootRate:
-                Math.max(
-                    .5,
-                    1.8 -
-                    level * .07
-                ),
-
-            /*
-               ENEMIES DO MORE DAMAGE
-               AS LEVEL GOES UP
-            */
-
-            damage:
-                10 +
-                level * 2
-
-        });
-
-    }
-
-}
-
-
-/* =========================================================
-   BOSS
-========================================================= */
-
-function createBoss() {
-
-    const bossNumber =
-        level / 2;
-
-    const color =
-        neonColors[
-            (bossNumber - 1) %
-            neonColors.length
-        ];
-
-
-    const hp =
-        200 +
-        level * 80;
-
-
-    enemies.push({
-
-        boss: true,
-
-        x: W / 2,
-
-        baseX: W / 2,
-
-        y: 130,
-
-        width: 150,
-
-        height: 95,
-
-        hp: hp,
-
-        maxHp: hp,
-
-        color: color,
-
-        phase: 0,
-
-        movementSpeed:
-            .7 +
-            level * .03,
-
-        movementWidth:
-            Math.min(
-                W * .35,
-                250
-            ),
-
-        shootTimer: 1,
-
-        shootRate:
-            Math.max(
-                .35,
-                1.1 -
-                level * .035
-            ),
-
-        damage:
-            20 +
-            level * 4
-
-    });
-
-}
-
-
-function showBoss() {
+    createBoss();
 
     bannerTimer = 2.5;
 
     document.getElementById(
-        "banner"
+      "banner"
     ).style.display = "block";
 
-}
+    return;
+
+  }
 
 
-/* =========================================================
-   SHOOTING
-========================================================= */
+  const count =
+    Math.min(
+      4 + level * 2,
+      24
+    );
 
-function playerShoot() {
+  const spacing =
+    W / 8;
 
-    playerShots.push({
 
-        x: player.x,
+  for(let i=0;i<count;i++){
 
-        y: player.y - 30,
+    const color =
+      neonColors[
+        (i + level) %
+        neonColors.length
+      ];
 
-        vx: 0,
+    const column =
+      i % 8;
 
-        vy: -720,
+    const row =
+      Math.floor(i / 8);
 
-        radius: 5,
+    const x =
+      spacing * column +
+      spacing / 2;
 
-        damage:
-            player.damage,
+    const hp =
+      25 +
+      level * 8;
 
-        color: "#00eaff"
+
+    enemies.push({
+
+      boss:false,
+
+      x:x,
+
+      baseX:x,
+
+      y:
+        120 +
+        row * 85,
+
+      width:48,
+
+      height:40,
+
+      hp:hp,
+
+      maxHp:hp,
+
+      color:color,
+
+      phase:
+        Math.random() *
+        Math.PI * 2,
+
+      movementSpeed:
+        .7 +
+        level * .025,
+
+      movementWidth:
+        Math.min(
+          100,
+          45 + level * 4
+        ),
+
+      shootTimer:
+        Math.random()*2,
+
+      shootRate:
+        Math.max(
+          .5,
+          1.8 -
+          level * .07
+        ),
+
+      damage:
+        10 +
+        level * 2
 
     });
 
+  }
+
 }
 
 
-function enemyShoot(enemy) {
+function createBoss(){
 
-    const speed =
-        240 +
-        level * 22;
+  const color =
+    neonColors[
+      (level/2 - 1) %
+      neonColors.length
+    ];
 
-
-    /*
-       BOSS:
-       3 BULLETS
-    */
-
-    if (enemy.boss) {
-
-        const angles =
-            [-.22, 0, .22];
+  const hp =
+    200 +
+    level * 80;
 
 
-        for (const angle of angles) {
+  enemies.push({
 
-            enemyShots.push({
+    boss:true,
 
-                x: enemy.x,
+    x:W/2,
 
-                y:
-                    enemy.y +
-                    enemy.height / 2,
+    baseX:W/2,
 
-                vx:
-                    Math.sin(angle) *
-                    speed,
+    y:130,
 
-                vy:
-                    Math.cos(angle) *
-                    speed,
+    width:150,
 
-                radius: 8,
+    height:95,
 
-                damage:
-                    enemy.damage,
+    hp:hp,
 
-                color:
-                    enemy.color
+    maxHp:hp,
 
-            });
+    color:color,
 
-        }
+    phase:0,
+
+    movementSpeed:
+      .7 +
+      level * .03,
+
+    movementWidth:
+      Math.min(
+        W*.35,
+        250
+      ),
+
+    shootTimer:1,
+
+    shootRate:
+      Math.max(
+        .35,
+        1.1 -
+        level * .035
+      ),
+
+    damage:
+      20 +
+      level * 4
+
+  });
+
+}
 
 
-        /*
-           HARDER BOSSES
-           GET AN EXTRA SHOT
-        */
+/* =====================================================
+   SHOOTING
+===================================================== */
 
-        if (level >= 6) {
+function playerShoot(){
 
-            enemyShots.push({
+  playerShots.push({
 
-                x: enemy.x,
+    x:player.x,
 
-                y:
-                    enemy.y +
-                    enemy.height / 2,
+    y:player.y - 30,
 
-                vx: 0,
+    vx:0,
 
-                vy:
-                    speed * 1.2,
+    vy:-720,
 
-                radius: 10,
+    radius:5,
 
-                damage:
-                    enemy.damage + 5,
+    damage:player.damage,
 
-                color: "#ffffff"
+    color:"#00eaff"
 
-            });
+  });
 
-        }
+}
 
-        return;
+
+function enemyShoot(enemy){
+
+  const speed =
+    240 +
+    level * 22;
+
+
+  if(enemy.boss){
+
+    const angles =
+      [-.22,0,.22];
+
+    for(const angle of angles){
+
+      enemyShots.push({
+
+        x:enemy.x,
+
+        y:
+          enemy.y +
+          enemy.height/2,
+
+        vx:
+          Math.sin(angle) *
+          speed,
+
+        vy:
+          Math.cos(angle) *
+          speed,
+
+        radius:8,
+
+        damage:
+          enemy.damage,
+
+        color:
+          enemy.color
+
+      });
+
     }
 
 
-    /*
-       NORMAL ENEMY
-    */
+    if(level >= 6){
+
+      enemyShots.push({
+
+        x:enemy.x,
+
+        y:
+          enemy.y +
+          enemy.height/2,
+
+        vx:0,
+
+        vy:
+          speed * 1.2,
+
+        radius:10,
+
+        damage:
+          enemy.damage + 5,
+
+        color:"#ff174f"
+
+      });
+
+    }
+
+  }else{
+
+    const dx =
+      player.x -
+      enemy.x;
+
+    const dy =
+      player.y -
+      enemy.y;
+
+    const distance =
+      Math.hypot(dx,dy) || 1;
+
 
     enemyShots.push({
 
-        x: enemy.x,
+      x:enemy.x,
 
-        y:
-            enemy.y +
-            enemy.height / 2,
+      y:
+        enemy.y +
+        enemy.height/2,
 
-        vx: 0,
+      vx:
+        dx/distance *
+        speed,
 
-        vy: speed,
+      vy:
+        dy/distance *
+        speed,
 
-        radius: 6,
+      radius:6,
 
-        damage:
-            enemy.damage,
+      damage:
+        enemy.damage,
 
-        color:
-            enemy.color
+      color:
+        enemy.color
 
     });
 
-}
-
-
-/* =========================================================
-   PLAYER DAMAGE
-========================================================= */
-
-function hurtPlayer(amount) {
-
-    player.lastHit =
-        performance.now() / 1000;
-
-
-    let damage =
-        amount;
-
-
-    if (player.shield > 0) {
-
-        const blocked =
-            Math.min(
-                player.shield,
-                damage
-            );
-
-        player.shield -=
-            blocked;
-
-        damage -=
-            blocked;
-
-    }
-
-
-    if (damage > 0) {
-
-        player.hp -=
-            damage;
-
-    }
-
-
-    explosion(
-        player.x,
-        player.y,
-        "#00eaff",
-        8
-    );
-
-
-    if (player.hp <= 0) {
-
-        player.hp = 0;
-
-        gameOver();
-
-    }
+  }
 
 }
 
 
-/* =========================================================
-   COLLISION
-========================================================= */
-
-function collision(circle, rect) {
-
-    const x =
-        Math.max(
-            rect.x -
-                rect.width / 2,
-
-            Math.min(
-                circle.x,
-
-                rect.x +
-                    rect.width / 2
-            )
-        );
-
-
-    const y =
-        Math.max(
-            rect.y -
-                rect.height / 2,
-
-            Math.min(
-                circle.y,
-
-                rect.y +
-                    rect.height / 2
-            )
-        );
-
-
-    const dx =
-        circle.x - x;
-
-    const dy =
-        circle.y - y;
-
-
-    return (
-        dx * dx +
-        dy * dy <
-        circle.radius *
-        circle.radius
-    );
-
-}
-
-
-/* =========================================================
-   EXPLOSIONS
-========================================================= */
+/* =====================================================
+   PARTICLES
+===================================================== */
 
 function explosion(
-    x,
-    y,
-    color,
-    amount
-) {
+  x,
+  y,
+  color,
+  amount=18
+){
 
-    for (let i = 0; i < amount; i++) {
+  for(let i=0;i<amount;i++){
 
-        const angle =
-            Math.random() *
-            Math.PI * 2;
+    const angle =
+      Math.random() *
+      Math.PI * 2;
 
-        const speed =
-            Math.random() *
-            180 + 40;
+    const speed =
+      Math.random()*180 +
+      40;
 
+    particles.push({
 
-        particles.push({
+      x:x,
 
-            x: x,
+      y:y,
 
-            y: y,
+      vx:
+        Math.cos(angle) *
+        speed,
 
-            vx:
-                Math.cos(angle) *
-                speed,
+      vy:
+        Math.sin(angle) *
+        speed,
 
-            vy:
-                Math.sin(angle) *
-                speed,
+      life:
+        .6 +
+        Math.random()*.5,
 
-            life:
-                Math.random() *
-                .6 + .2,
+      color:color,
 
-            size:
-                Math.random() *
-                4 + 1,
+      size:
+        Math.random()*4 + 2
 
-            color: color
+    });
 
-        });
-
-    }
+  }
 
 }
 
 
-function updateParticles(dt) {
+function updateParticles(dt){
 
-    for (
-        let i =
-            particles.length - 1;
-        i >= 0;
-        i--
-    ) {
+  for(
+    let i=particles.length-1;
+    i>=0;
+    i--
+  ){
 
-        const p =
-            particles[i];
+    const p =
+      particles[i];
 
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
 
-        p.x +=
-            p.vx * dt;
+    p.vx *= .97;
+    p.vy *= .97;
 
-        p.y +=
-            p.vy * dt;
+    p.life -= dt;
 
+    if(p.life <= 0){
 
-        p.vx *= .97;
-        p.vy *= .97;
-
-
-        p.life -=
-            dt;
-
-
-        if (p.life <= 0) {
-
-            particles.splice(
-                i,
-                1
-            );
-
-        }
+      particles.splice(i,1);
 
     }
+
+  }
 
 }
 
 
-function drawParticles() {
+function drawParticles(){
 
-    for (const p of particles) {
+  for(const p of particles){
 
-        ctx.globalAlpha =
-            Math.max(
-                0,
-                p.life
-            );
+    ctx.save();
 
-        ctx.fillStyle =
-            p.color;
+    ctx.globalAlpha =
+      Math.max(
+        0,
+        p.life
+      );
 
-        ctx.shadowColor =
-            p.color;
+    ctx.fillStyle =
+      p.color;
 
-        ctx.shadowBlur = 15;
+    ctx.shadowColor =
+      p.color;
 
+    ctx.shadowBlur = 12;
 
-        ctx.beginPath();
+    ctx.beginPath();
 
-        ctx.arc(
-            p.x,
-            p.y,
-            p.size,
-            0,
-            Math.PI * 2
-        );
+    ctx.arc(
+      p.x,
+      p.y,
+      p.size,
+      0,
+      Math.PI*2
+    );
 
-        ctx.fill();
+    ctx.fill();
 
-    }
+    ctx.restore();
 
-    ctx.globalAlpha = 1;
-    ctx.shadowBlur = 0;
+  }
 
 }
 
 
-/* =========================================================
+/* =====================================================
+   COLLISION
+===================================================== */
+
+function collisionCircleRect(
+  circle,
+  rect
+){
+
+  const nearestX =
+    Math.max(
+      rect.x -
+      rect.width/2,
+
+      Math.min(
+        circle.x,
+
+        rect.x +
+        rect.width/2
+      )
+    );
+
+  const nearestY =
+    Math.max(
+      rect.y -
+      rect.height/2,
+
+      Math.min(
+        circle.y,
+
+        rect.y +
+        rect.height/2
+      )
+    );
+
+  return Math.hypot(
+    circle.x -
+    nearestX,
+
+    circle.y -
+    nearestY
+  ) < circle.radius;
+
+}
+
+
+/* =====================================================
+   DAMAGE PLAYER
+===================================================== */
+
+function hurtPlayer(damage){
+
+  player.lastHit =
+    performance.now()/1000;
+
+
+  const shieldDamage =
+    Math.min(
+      player.shield,
+      damage
+    );
+
+  player.shield -=
+    shieldDamage;
+
+  player.hp -=
+    damage -
+    shieldDamage;
+
+
+  explosion(
+    player.x,
+    player.y,
+    "#00eaff",
+    8
+  );
+
+
+  if(player.hp <= 0){
+
+    gameOver();
+
+  }
+
+}
+
+
+/* =====================================================
    UPDATE
-========================================================= */
+===================================================== */
 
-function update(dt) {
+function update(dt){
 
-    if (!running)
-        return;
+  updateStars(dt);
 
-
-    updateStars(dt);
+  if(!running){
 
     updateParticles(dt);
 
+    return;
 
-    if (bannerTimer > 0) {
+  }
 
-        bannerTimer -= dt;
 
-        if (bannerTimer <= 0) {
+  let direction = 0;
 
-            document.getElementById(
-                "banner"
-            ).style.display = "none";
 
-        }
+  if(
+    keys["a"] ||
+    keys["A"] ||
+    keys["ArrowLeft"]
+  ){
 
-    }
+    direction--;
 
+  }
 
-    if (levelTimer > 0) {
 
-        levelTimer -= dt;
+  if(
+    keys["d"] ||
+    keys["D"] ||
+    keys["ArrowRight"]
+  ){
 
-        if (levelTimer <= 0) {
+    direction++;
 
-            document.getElementById(
-                "levelBanner"
-            ).style.display =
-                "none";
+  }
 
-        }
 
-    }
+  player.x +=
+    direction *
+    player.speed *
+    dt;
 
 
-    /*
-       PLAYER MOVEMENT
-    */
+  player.x =
+    Math.max(
+      30,
+      Math.min(
+        W-30,
+        player.x
+      )
+    );
 
-    let direction = 0;
 
-
-    if (
-        keys["ArrowLeft"] ||
-        keys["a"] ||
-        keys["A"]
-    ) {
-
-        direction--;
-
-    }
-
-
-    if (
-        keys["ArrowRight"] ||
-        keys["d"] ||
-        keys["D"]
-    ) {
-
-        direction++;
-
-    }
-
-
-    player.x +=
-        direction *
-        player.speed *
-        dt;
-
-
-    player.x =
-        Math.max(
-            25,
-
-            Math.min(
-                W - 25,
-                player.x
-            )
-        );
-
-
-    /*
-       SHOOT
-    */
-
-    if (shooting) {
-
-        if (!player.cooldown)
-            player.cooldown = 0;
-
-
-        player.cooldown -= dt;
-
-
-        if (
-            player.cooldown <= 0
-        ) {
-
-            playerShoot();
-
-            player.cooldown =
-                player.fireRate;
-
-        }
-
-    } else {
-
-        player.cooldown = 0;
-
-    }
-
-
-    /*
-       ENEMIES
-    */
-
-    for (const enemy of enemies) {
-
-        enemy.phase +=
-            enemy.movementSpeed *
-            dt;
-
-
-        enemy.x =
-            enemy.baseX +
-            Math.sin(
-                enemy.phase
-            ) *
-            enemy.movementWidth;
-
-
-        enemy.x =
-            Math.max(
-                enemy.width / 2,
-
-                Math.min(
-                    W -
-                    enemy.width / 2,
-
-                    enemy.x
-                )
-            );
-
-
-        enemy.shootTimer -=
-            dt;
-
-
-        if (
-            enemy.shootTimer <= 0
-        ) {
-
-            enemyShoot(enemy);
-
-            enemy.shootTimer =
-                enemy.shootRate +
-                Math.random() * .5;
-
-        }
-
-    }
-
-
-    /*
-       PLAYER BULLETS
-    */
-
-    for (
-        let i =
-            playerShots.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const shot =
-            playerShots[i];
-
-
-        shot.x +=
-            shot.vx * dt;
-
-        shot.y +=
-            shot.vy * dt;
-
-
-        if (shot.y < -30) {
-
-            playerShots.splice(
-                i,
-                1
-            );
-
-            continue;
-
-        }
-
-
-        for (
-            let j =
-                enemies.length - 1;
-            j >= 0;
-            j--
-        ) {
-
-            const enemy =
-                enemies[j];
-
-
-            if (
-                collision(
-                    shot,
-                    enemy
-                )
-            ) {
-
-                enemy.hp -=
-                    shot.damage;
-
-
-                explosion(
-                    shot.x,
-                    shot.y,
-                    enemy.color,
-                    enemy.boss ? 3 : 2
-                );
-
-
-                playerShots.splice(
-                    i,
-                    1
-                );
-
-
-                /*
-                   DESTROYED
-                */
-
-                if (
-                    enemy.hp <= 0
-                ) {
-
-                    if (
-                        enemy.boss
-                    ) {
-
-                        score +=
-                            1000 *
-                            level;
-
-
-                        explosion(
-                            enemy.x,
-                            enemy.y,
-                            enemy.color,
-                            80
-                        );
-
-                    } else {
-
-                        score +=
-                            100 *
-                            level;
-
-
-                        explosion(
-                            enemy.x,
-                            enemy.y,
-                            enemy.color,
-                            25
-                        );
-
-                    }
-
-
-                    enemies.splice(
-                        j,
-                        1
-                    );
-
-                }
-
-
-                break;
-
-            }
-
-        }
-
-    }
-
-
-    /*
-       ENEMY BULLETS
-    */
-
-    for (
-        let i =
-            enemyShots.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const shot =
-            enemyShots[i];
-
-
-        shot.x +=
-            shot.vx * dt;
-
-        shot.y +=
-            shot.vy * dt;
-
-
-        if (
-            shot.y > H + 30 ||
-            shot.x < -30 ||
-            shot.x > W + 30
-        ) {
-
-            enemyShots.splice(
-                i,
-                1
-            );
-
-            continue;
-
-        }
-
-
-        const rect = {
-
-            x: player.x,
-
-            y: player.y,
-
-            width:
-                player.width,
-
-            height:
-                player.height
-
-        };
-
-
-        if (
-            collision(
-                shot,
-                rect
-            )
-        ) {
-
-            hurtPlayer(
-                shot.damage
-            );
-
-
-            enemyShots.splice(
-                i,
-                1
-            );
-
-        }
-
-    }
-
-
-    /*
-       SHIELD RECHARGE
-    */
+  if(shooting){
 
     const now =
-        performance.now() /
-        1000;
+      performance.now()/1000;
 
+    if(
+      now -
+      player.lastShot >=
+      player.fireRate
+    ){
 
-    if (
-        now -
-        player.lastHit >
-        2
-    ) {
+      playerShoot();
 
-        player.shield =
-            Math.min(
-                player.maxShield,
-
-                player.shield +
-                12 * dt
-            );
+      player.lastShot =
+        now;
 
     }
 
-
-    /*
-       NEXT LEVEL
-    */
-
-    if (
-        enemies.length === 0 &&
-        running
-    ) {
-
-        nextLevel();
-
-    }
+  }
 
 
-    updateUI();
+  /* ENEMY MOVEMENT */
 
-}
+  for(const enemy of enemies){
+
+    enemy.phase +=
+      enemy.movementSpeed *
+      dt;
+
+    enemy.x =
+      enemy.baseX +
+      Math.sin(
+        enemy.phase
+      ) *
+      enemy.movementWidth;
 
 
-/* =========================================================
-   NEXT LEVEL
-========================================================= */
-
-function nextLevel() {
-
-    level++;
-
-
-    player.hp =
+    enemy.x =
+      Math.max(
+        enemy.width/2,
         Math.min(
-            player.maxHp,
+          W -
+          enemy.width/2,
+          enemy.x
+        )
+      );
 
-            player.hp +
-            player.maxHp * .2
+
+    enemy.shootTimer -= dt;
+
+
+    if(
+      enemy.shootTimer <= 0
+    ){
+
+      enemyShoot(enemy);
+
+      enemy.shootTimer =
+        enemy.shootRate;
+
+    }
+
+  }
+
+
+  /* PLAYER SHOTS */
+
+  for(
+    let i=playerShots.length-1;
+    i>=0;
+    i--
+  ){
+
+    const shot =
+      playerShots[i];
+
+    shot.x +=
+      shot.vx * dt;
+
+    shot.y +=
+      shot.vy * dt;
+
+
+    if(
+      shot.y < -30
+    ){
+
+      playerShots.splice(i,1);
+
+      continue;
+
+    }
+
+
+    for(
+      let j=enemies.length-1;
+      j>=0;
+      j--
+    ){
+
+      const enemy =
+        enemies[j];
+
+
+      if(
+        Math.abs(
+          shot.x -
+          enemy.x
+        ) <
+        enemy.width/2 +
+        shot.radius &&
+
+        Math.abs(
+          shot.y -
+          enemy.y
+        ) <
+        enemy.height/2 +
+        shot.radius
+      ){
+
+        enemy.hp -=
+          shot.damage;
+
+        playerShots.splice(
+          i,
+          1
         );
 
+
+        explosion(
+          shot.x,
+          shot.y,
+          enemy.color,
+          5
+        );
+
+
+        if(enemy.hp <= 0){
+
+          score +=
+            enemy.boss
+              ? 1000 * level
+              : 100 * level;
+
+
+          explosion(
+            enemy.x,
+            enemy.y,
+            enemy.color,
+            enemy.boss
+              ? 45
+              : 25
+          );
+
+
+          enemies.splice(
+            j,
+            1
+          );
+
+        }
+
+        break;
+
+      }
+
+    }
+
+  }
+
+
+  /* ENEMY SHOTS */
+
+  for(
+    let i=enemyShots.length-1;
+    i>=0;
+    i--
+  ){
+
+    const shot =
+      enemyShots[i];
+
+
+    shot.x +=
+      shot.vx * dt;
+
+    shot.y +=
+      shot.vy * dt;
+
+
+    if(
+      shot.y > H+40 ||
+      shot.x < -40 ||
+      shot.x > W+40
+    ){
+
+      enemyShots.splice(i,1);
+
+      continue;
+
+    }
+
+
+    if(
+      collisionCircleRect(
+        shot,
+        player
+      )
+    ){
+
+      hurtPlayer(
+        shot.damage
+      );
+
+      enemyShots.splice(
+        i,
+        1
+      );
+
+    }
+
+  }
+
+
+  /* SHIELD RECHARGE */
+
+  const now =
+    performance.now()/1000;
+
+
+  if(
+    now -
+    player.lastHit >
+    2
+  ){
 
     player.shield =
-        player.maxShield;
+      Math.min(
+        player.maxShield,
+
+        player.shield +
+        12 * dt
+      );
+
+  }
 
 
-    showLevel();
+  /* NEXT LEVEL */
+
+  if(
+    enemies.length === 0
+  ){
+
+    nextLevel();
+
+  }
 
 
-    createEnemies();
+  if(bannerTimer > 0){
+
+    bannerTimer -= dt;
+
+    if(
+      bannerTimer <= 0
+    ){
+
+      document.getElementById(
+        "banner"
+      ).style.display =
+        "none";
+
+    }
+
+  }
+
+
+  if(levelTimer > 0){
+
+    levelTimer -= dt;
+
+    if(
+      levelTimer <= 0
+    ){
+
+      document.getElementById(
+        "levelBanner"
+      ).style.display =
+        "none";
+
+    }
+
+  }
+
+
+  updateParticles(dt);
+
+  updateUI();
 
 }
 
 
-function showLevel() {
+/* =====================================================
+   NEXT LEVEL
+===================================================== */
 
-    const el =
-        document.getElementById(
-            "levelBanner"
-        );
+function nextLevel(){
 
+  level++;
 
-    if (
-        level % 2 === 0
-    ) {
+  if(level > bestLevel){
 
-        el.textContent =
-            "LEVEL " +
-            level +
-            " — BOSS";
+    bestLevel =
+      level;
 
-    } else {
+    saveGame();
 
-        el.textContent =
-            "LEVEL " +
-            level;
-
-    }
+  }
 
 
-    el.style.display =
-        "block";
+  player.hp =
+    Math.min(
+      player.maxHp,
+
+      player.hp +
+      player.maxHp*.2
+    );
 
 
-    levelTimer = 1.7;
+  player.shield =
+    player.maxShield;
+
+
+  const banner =
+    document.getElementById(
+      "levelBanner"
+    );
+
+
+  if(level % 2 === 0){
+
+    banner.textContent =
+      "LEVEL " +
+      level +
+      " — BOSS";
+
+  }else{
+
+    banner.textContent =
+      "LEVEL " +
+      level;
+
+  }
+
+
+  banner.style.display =
+    "block";
+
+  levelTimer = 1.7;
+
+
+  createEnemies();
 
 }
 
 
-/* =========================================================
-   DRAW GAME
-========================================================= */
+/* =====================================================
+   DRAW
+===================================================== */
 
-function draw() {
+function draw(){
 
-    ctx.clearRect(
-        0,
-        0,
-        W,
-        H
+  const gradient =
+    ctx.createRadialGradient(
+      W/2,
+      H/2,
+      0,
+      W/2,
+      H/2,
+      H
     );
 
 
-    /*
-       BACKGROUND
-    */
+  gradient.addColorStop(
+    0,
+    "#071b35"
+  );
 
-    const gradient =
-        ctx.createRadialGradient(
-            W / 2,
-            H / 2,
-            0,
-            W / 2,
-            H / 2,
-            H
-        );
+  gradient.addColorStop(
+    1,
+    "#02030a"
+  );
 
 
-    gradient.addColorStop(
-        0,
-        "#071b35"
-    );
+  ctx.fillStyle =
+    gradient;
 
-    gradient.addColorStop(
-        1,
-        "#02030a"
-    );
-
-
-    ctx.fillStyle =
-        gradient;
-
-    ctx.fillRect(
-        0,
-        0,
-        W,
-        H
-    );
+  ctx.fillRect(
+    0,
+    0,
+    W,
+    H
+  );
 
 
-    drawStars();
+  drawStars();
+
+  drawPlayer();
 
 
-    /*
-       PLAYER
-    */
+  for(const enemy of enemies){
 
-    drawPlayer();
+    if(enemy.boss){
 
+      drawBoss(enemy);
 
-    /*
-       ENEMIES
-    */
+    }else{
 
-    for (const enemy of enemies) {
-
-        if (enemy.boss)
-            drawBoss(enemy);
-        else
-            drawNormalEnemy(enemy);
+      drawNormalEnemy(enemy);
 
     }
 
-
-    /*
-       PLAYER SHOTS
-    */
-
-    for (const shot of playerShots) {
-
-        ctx.save();
-
-        ctx.fillStyle =
-            shot.color;
-
-        ctx.shadowColor =
-            shot.color;
-
-        ctx.shadowBlur = 18;
+  }
 
 
-        ctx.beginPath();
-
-        ctx.arc(
-            shot.x,
-            shot.y,
-            shot.radius,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-
-        ctx.restore();
-
-    }
-
-
-    /*
-       ENEMY SHOTS
-    */
-
-    for (const shot of enemyShots) {
-
-        ctx.save();
-
-        ctx.fillStyle =
-            shot.color;
-
-        ctx.shadowColor =
-            shot.color;
-
-        ctx.shadowBlur =
-            shot.radius > 8
-                ? 25
-                : 15;
-
-
-        ctx.beginPath();
-
-        ctx.arc(
-            shot.x,
-            shot.y,
-            shot.radius,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-
-        ctx.restore();
-
-    }
-
-
-    drawParticles();
-
-
-    /*
-       BOSS HEALTH
-    */
-
-    const boss =
-        enemies.find(
-            e => e.boss
-        );
-
-
-    const bossUI =
-        document.getElementById(
-            "bossUI"
-        );
-
-
-    if (boss) {
-
-        bossUI.style.display =
-            "block";
-
-
-        document.getElementById(
-            "bossFill"
-        ).style.width =
-            Math.max(
-                0,
-                boss.hp /
-                boss.maxHp *
-                100
-            ) + "%";
-
-
-        document.getElementById(
-            "bossTitle"
-        ).textContent =
-            "⚠ BOSS — LEVEL " +
-            level +
-            " ⚠";
-
-    } else {
-
-        bossUI.style.display =
-            "none";
-
-    }
-
-}
-
-
-/* =========================================================
-   ORIGINAL-STYLE NEON ENEMY
-========================================================= */
-
-function drawNormalEnemy(enemy) {
+  for(const shot of playerShots){
 
     ctx.save();
 
-
-    ctx.translate(
-        enemy.x,
-        enemy.y
-    );
-
-
-    /*
-       THIS IS THE REGULAR
-       NEON SPIKY SHIP
-    */
-
     ctx.fillStyle =
-        enemy.color;
-
-    ctx.strokeStyle =
-        "#ffffff";
-
-    ctx.lineWidth = 1.5;
+      shot.color;
 
     ctx.shadowColor =
-        enemy.color;
+      shot.color;
 
-    ctx.shadowBlur = 20;
-
-
-    /*
-       Main spiky body
-    */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        -23
-    );
-
-    ctx.lineTo(
-        -10,
-        -9
-    );
-
-    ctx.lineTo(
-        -27,
-        -13
-    );
-
-    ctx.lineTo(
-        -17,
-        2
-    );
-
-    ctx.lineTo(
-        -30,
-        17
-    );
-
-    ctx.lineTo(
-        -8,
-        11
-    );
-
-    ctx.lineTo(
-        0,
-        23
-    );
-
-    ctx.lineTo(
-        8,
-        11
-    );
-
-    ctx.lineTo(
-        30,
-        17
-    );
-
-    ctx.lineTo(
-        17,
-        2
-    );
-
-    ctx.lineTo(
-        27,
-        -13
-    );
-
-    ctx.lineTo(
-        10,
-        -9
-    );
-
-    ctx.closePath();
-
-
-    ctx.fill();
-    ctx.stroke();
-
-
-    /*
-       Inner neon shape
-    */
-
-    ctx.fillStyle =
-        "#050814";
-
-    ctx.shadowColor =
-        enemy.color;
-
-    ctx.shadowBlur = 12;
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        -13
-    );
-
-    ctx.lineTo(
-        -13,
-        7
-    );
-
-    ctx.lineTo(
-        0,
-        13
-    );
-
-    ctx.lineTo(
-        13,
-        7
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    /*
-       Center energy core
-    */
-
-    ctx.fillStyle =
-        "#ffffff";
-
-    ctx.shadowColor =
-        enemy.color;
-
-    ctx.shadowBlur = 15;
-
+    ctx.shadowBlur = 18;
 
     ctx.beginPath();
 
     ctx.arc(
-        0,
-        0,
-        5,
-        0,
-        Math.PI * 2
+      shot.x,
+      shot.y,
+      shot.radius,
+      0,
+      Math.PI*2
     );
 
     ctx.fill();
 
-
-    /*
-       HP BAR
-    */
-
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle =
-        "#111";
-
-    ctx.fillRect(
-        -25,
-        -34,
-        50,
-        5
-    );
-
-
-    ctx.fillStyle =
-        enemy.color;
-
-    ctx.fillRect(
-        -25,
-        -34,
-        50 *
-        Math.max(
-            0,
-            enemy.hp /
-            enemy.maxHp
-        ),
-        5
-    );
-
-
     ctx.restore();
 
-}
+  }
 
 
-/* =========================================================
-   BOSS DRAW
-========================================================= */
-
-function drawBoss(enemy) {
+  for(const shot of enemyShots){
 
     ctx.save();
 
-
-    ctx.translate(
-        enemy.x,
-        enemy.y
-    );
-
-
-    const pulse =
-        1 +
-        Math.sin(
-            performance.now() *
-            .005
-        ) * .04;
-
-
-    ctx.scale(
-        pulse,
-        pulse
-    );
-
-
     ctx.fillStyle =
-        enemy.color;
-
-    ctx.strokeStyle =
-        "#ffffff";
-
-    ctx.lineWidth = 2;
+      shot.color;
 
     ctx.shadowColor =
-        enemy.color;
+      shot.color;
 
-    ctx.shadowBlur = 40;
-
-
-    /*
-       HUGE BOSS SHIP
-    */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        -52
-    );
-
-    ctx.lineTo(
-        -35,
-        -25
-    );
-
-    ctx.lineTo(
-        -82,
-        22
-    );
-
-    ctx.lineTo(
-        -48,
-        18
-    );
-
-    ctx.lineTo(
-        -28,
-        48
-    );
-
-    ctx.lineTo(
-        0,
-        30
-    );
-
-    ctx.lineTo(
-        28,
-        48
-    );
-
-    ctx.lineTo(
-        48,
-        18
-    );
-
-    ctx.lineTo(
-        82,
-        22
-    );
-
-    ctx.lineTo(
-        35,
-        -25
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-    ctx.stroke();
-
-
-    /*
-       DARK CENTER
-    */
-
-    ctx.fillStyle =
-        "#050814";
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        -42
-    );
-
-    ctx.lineTo(
-        -35,
-        20
-    );
-
-    ctx.lineTo(
-        0,
-        30
-    );
-
-    ctx.lineTo(
-        35,
-        20
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    /*
-       ENERGY CORE
-    */
-
-    ctx.fillStyle =
-        enemy.color;
-
-    ctx.shadowColor =
-        enemy.color;
-
-    ctx.shadowBlur = 35;
-
+    ctx.shadowBlur =
+      shot.radius > 8
+        ? 25
+        : 15;
 
     ctx.beginPath();
 
     ctx.arc(
-        0,
-        -5,
-        16,
-        0,
-        Math.PI * 2
+      shot.x,
+      shot.y,
+      shot.radius,
+      0,
+      Math.PI*2
     );
 
     ctx.fill();
-
-
-    ctx.fillStyle =
-        "#ffffff";
-
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        -5,
-        6,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-
-    /*
-       CANNONS
-    */
-
-    ctx.fillStyle =
-        enemy.color;
-
-    ctx.fillRect(
-        -65,
-        4,
-        20,
-        10
-    );
-
-    ctx.fillRect(
-        45,
-        4,
-        20,
-        10
-    );
-
-
-    /*
-       BOSS TEXT
-    */
-
-    ctx.shadowBlur = 10;
-
-    ctx.fillStyle =
-        "#ffffff";
-
-    ctx.font =
-        "bold 16px Arial";
-
-    ctx.textAlign =
-        "center";
-
-    ctx.fillText(
-        "BOSS",
-        0,
-        62
-    );
-
 
     ctx.restore();
+
+  }
+
+
+  drawParticles();
+
+
+  const boss =
+    enemies.find(
+      e => e.boss
+    );
+
+
+  const bossUI =
+    document.getElementById(
+      "bossUI"
+    );
+
+
+  if(boss){
+
+    bossUI.style.display =
+      "block";
+
+
+    document.getElementById(
+      "bossFill"
+    ).style.width =
+      Math.max(
+        0,
+        boss.hp /
+        boss.maxHp *
+        100
+      ) + "%";
+
+
+    document.getElementById(
+      "bossTitle"
+    ).textContent =
+      "⚠ BOSS — LEVEL " +
+      level +
+      " ⚠";
+
+  }else{
+
+    bossUI.style.display =
+      "none";
+
+  }
 
 }
 
 
-/* =========================================================
+/* =====================================================
+   NORMAL ENEMY
+===================================================== */
+
+function drawNormalEnemy(enemy){
+
+  ctx.save();
+
+  ctx.translate(
+    enemy.x,
+    enemy.y
+  );
+
+
+  ctx.fillStyle =
+    enemy.color;
+
+  ctx.strokeStyle =
+    "#ffffff";
+
+  ctx.lineWidth = 1.5;
+
+  ctx.shadowColor =
+    enemy.color;
+
+  ctx.shadowBlur = 20;
+
+
+  /* SPIKY SHIP */
+
+  ctx.beginPath();
+
+  ctx.moveTo(0,-23);
+
+  ctx.lineTo(-10,-9);
+
+  ctx.lineTo(-27,-13);
+
+  ctx.lineTo(-17,2);
+
+  ctx.lineTo(-30,17);
+
+  ctx.lineTo(-8,11);
+
+  ctx.lineTo(0,23);
+
+  ctx.lineTo(8,11);
+
+  ctx.lineTo(30,17);
+
+  ctx.lineTo(17,2);
+
+  ctx.lineTo(27,-13);
+
+  ctx.lineTo(10,-9);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+  ctx.stroke();
+
+
+  /* CENTER */
+
+  ctx.fillStyle =
+    "#050814";
+
+  ctx.shadowBlur = 12;
+
+  ctx.beginPath();
+
+  ctx.moveTo(0,-13);
+
+  ctx.lineTo(-13,7);
+
+  ctx.lineTo(0,13);
+
+  ctx.lineTo(13,7);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  /* CORE */
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    0,
+    5,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  /* HP BAR */
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "#111";
+
+  ctx.fillRect(
+    -25,
+    -34,
+    50,
+    5
+  );
+
+
+  ctx.fillStyle =
+    enemy.color;
+
+  ctx.fillRect(
+    -25,
+    -34,
+    50 *
+    Math.max(
+      0,
+      enemy.hp /
+      enemy.maxHp
+    ),
+    5
+  );
+
+
+  ctx.restore();
+
+}
+
+
+/* =====================================================
+   BOSS
+===================================================== */
+
+function drawBoss(enemy){
+
+  ctx.save();
+
+  ctx.translate(
+    enemy.x,
+    enemy.y
+  );
+
+
+  const pulse =
+    1 +
+    Math.sin(
+      performance.now() *
+      .005
+    )*.04;
+
+
+  ctx.scale(
+    pulse,
+    pulse
+  );
+
+
+  ctx.fillStyle =
+    enemy.color;
+
+  ctx.strokeStyle =
+    "#ffffff";
+
+  ctx.lineWidth = 2;
+
+  ctx.shadowColor =
+    enemy.color;
+
+  ctx.shadowBlur = 40;
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(0,-52);
+
+  ctx.lineTo(-35,-25);
+
+  ctx.lineTo(-82,22);
+
+  ctx.lineTo(-48,18);
+
+  ctx.lineTo(-28,48);
+
+  ctx.lineTo(0,30);
+
+  ctx.lineTo(28,48);
+
+  ctx.lineTo(48,18);
+
+  ctx.lineTo(82,22);
+
+  ctx.lineTo(35,-25);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+  ctx.stroke();
+
+
+  ctx.fillStyle =
+    "#050814";
+
+  ctx.beginPath();
+
+  ctx.moveTo(0,-42);
+
+  ctx.lineTo(-35,20);
+
+  ctx.lineTo(0,30);
+
+  ctx.lineTo(35,20);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  ctx.fillStyle =
+    enemy.color;
+
+  ctx.shadowBlur = 35;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    -5,
+    16,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    -5,
+    6,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  ctx.fillStyle =
+    enemy.color;
+
+  ctx.fillRect(
+    -65,
+    4,
+    20,
+    10
+  );
+
+  ctx.fillRect(
+    45,
+    4,
+    20,
+    10
+  );
+
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.font =
+    "bold 16px Arial";
+
+  ctx.textAlign =
+    "center";
+
+  ctx.fillText(
+    "BOSS",
+    0,
+    62
+  );
+
+
+  ctx.restore();
+
+}
+
+
+/* =====================================================
    PLAYER DRAW
-========================================================= */
+===================================================== */
 
-function drawPlayer() {
+function drawPlayer(){
 
-    ctx.save();
-
-
-    /*
-       SHIELD
-    */
-
-    if (
-        player.shield > 0
-    ) {
-
-        ctx.strokeStyle =
-            "#00eaff";
-
-        ctx.lineWidth = 2;
-
-        ctx.shadowColor =
-            "#00eaff";
-
-        ctx.shadowBlur = 20;
-
-        ctx.globalAlpha =
-            .2 +
-            .3 *
-            (
-                player.shield /
-                player.maxShield
-            );
+  ctx.save();
 
 
-        ctx.beginPath();
+  /* SHIELD */
 
-        ctx.arc(
-            player.x,
-            player.y,
-            34,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.stroke();
-
-        ctx.globalAlpha = 1;
-
-    }
-
-
-    /*
-       ENGINE FLAME
-    */
-
-    ctx.fillStyle =
-        "#00eaff";
-
-    ctx.shadowColor =
-        "#00eaff";
-
-    ctx.shadowBlur = 20;
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        player.x - 10,
-        player.y + 20
-    );
-
-    ctx.lineTo(
-        player.x,
-        player.y + 45 +
-        Math.random() * 8
-    );
-
-    ctx.lineTo(
-        player.x + 10,
-        player.y + 20
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    /*
-       PLAYER SHIP
-    */
-
-    ctx.fillStyle =
-        "#1677ff";
+  if(player.shield > 0){
 
     ctx.strokeStyle =
-        "#00eaff";
+      "#00eaff";
 
     ctx.lineWidth = 2;
 
     ctx.shadowColor =
-        "#00eaff";
+      "#00eaff";
 
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 20;
 
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        player.x,
-        player.y - 31
-    );
-
-    ctx.lineTo(
-        player.x - 23,
-        player.y + 24
-    );
-
-    ctx.lineTo(
-        player.x - 7,
-        player.y + 17
-    );
-
-    ctx.lineTo(
-        player.x,
-        player.y + 29
-    );
-
-    ctx.lineTo(
-        player.x + 7,
-        player.y + 17
-    );
-
-    ctx.lineTo(
-        player.x + 23,
-        player.y + 24
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-    ctx.stroke();
-
-
-    /*
-       COCKPIT
-    */
-
-    ctx.fillStyle =
-        "#ffffff";
-
-    ctx.shadowColor =
-        "#00eaff";
-
-    ctx.shadowBlur = 12;
+    ctx.globalAlpha =
+      .2 +
+      .3 *
+      (
+        player.shield /
+        player.maxShield
+      );
 
 
     ctx.beginPath();
 
     ctx.arc(
-        player.x,
-        player.y - 8,
-        6,
-        0,
-        Math.PI * 2
+      player.x,
+      player.y,
+      34,
+      0,
+      Math.PI*2
     );
 
-    ctx.fill();
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+
+  }
 
 
-    ctx.restore();
+  /* ENGINE */
+
+  ctx.fillStyle =
+    "#00eaff";
+
+  ctx.shadowColor =
+    "#00eaff";
+
+  ctx.shadowBlur = 20;
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    player.x-10,
+    player.y+20
+  );
+
+  ctx.lineTo(
+    player.x,
+    player.y+45+
+    Math.random()*8
+  );
+
+  ctx.lineTo(
+    player.x+10,
+    player.y+20
+  );
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  /* SHIP */
+
+  ctx.fillStyle =
+    "#1677ff";
+
+  ctx.strokeStyle =
+    "#00eaff";
+
+  ctx.lineWidth = 2;
+
+  ctx.shadowBlur = 15;
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    player.x,
+    player.y-31
+  );
+
+  ctx.lineTo(
+    player.x-23,
+    player.y+24
+  );
+
+  ctx.lineTo(
+    player.x-7,
+    player.y+17
+  );
+
+  ctx.lineTo(
+    player.x,
+    player.y+29
+  );
+
+  ctx.lineTo(
+    player.x+7,
+    player.y+17
+  );
+
+  ctx.lineTo(
+    player.x+23,
+    player.y+24
+  );
+
+  ctx.closePath();
+
+  ctx.fill();
+
+  ctx.stroke();
+
+
+  /* COCKPIT */
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.shadowColor =
+    "#00eaff";
+
+  ctx.shadowBlur = 12;
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+    player.x,
+    player.y-8,
+    6,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  ctx.restore();
 
 }
 
 
-/* =========================================================
+/* =====================================================
    UI
-========================================================= */
+===================================================== */
 
-function updateUI() {
+function updateUI(){
 
-    document.getElementById(
-        "level"
-    ).textContent =
-        level;
-
-
-    document.getElementById(
-        "score"
-    ).textContent =
-        score.toLocaleString();
+  document.getElementById(
+    "level"
+  ).textContent =
+    level;
 
 
-    document.getElementById(
-        "money"
-    ).textContent =
-        money.toFixed(2);
+  document.getElementById(
+    "score"
+  ).textContent =
+    score.toLocaleString();
 
 
-    document.getElementById(
-        "hpFill"
-    ).style.width =
-        Math.max(
-            0,
-            player.hp /
-            player.maxHp *
-            100
-        ) + "%";
+  document.getElementById(
+    "money"
+  ).textContent =
+    money.toFixed(2);
 
 
-    document.getElementById(
-        "shieldFill"
-    ).style.width =
-        Math.max(
-            0,
-            player.shield /
-            player.maxShield *
-            100
-        ) + "%";
-
-}
+  document.getElementById(
+    "hpFill"
+  ).style.width =
+    Math.max(
+      0,
+      player.hp /
+      player.maxHp *
+      100
+    ) + "%";
 
 
-function updateMoneyUI() {
-
-    document.getElementById(
-        "money"
-    ).textContent =
-        money.toFixed(2);
-
-
-    document.getElementById(
-        "startMoney"
-    ).textContent =
-        money.toFixed(2);
+  document.getElementById(
+    "shieldFill"
+  ).style.width =
+    Math.max(
+      0,
+      player.shield /
+      player.maxShield *
+      100
+    ) + "%";
 
 
-    document.getElementById(
-        "upgradeMoney"
-    ).textContent =
-        money.toFixed(2);
+  document.getElementById(
+    "bestScore"
+  ).textContent =
+    bestScore.toLocaleString();
 
 
-    document.getElementById(
-        "totalMoney"
-    ).textContent =
-        money.toFixed(2);
+  document.getElementById(
+    "bestLevel"
+  ).textContent =
+    bestLevel;
 
 }
 
 
-function updateUpgradeUI() {
+function updateMoneyUI(){
 
-    document.getElementById(
-        "upgradeMoney"
-    ).textContent =
-        money.toFixed(2);
+  document.getElementById(
+    "money"
+  ).textContent =
+    money.toFixed(2);
 
+  document.getElementById(
+    "startMoney"
+  ).textContent =
+    money.toFixed(2);
 
-    document.getElementById(
-        "fireLevel"
-    ).textContent =
-        upgrades.fire.level;
+  document.getElementById(
+    "upgradeMoney"
+  ).textContent =
+    money.toFixed(2);
 
+  document.getElementById(
+    "totalMoney"
+  ).textContent =
+    money.toFixed(2);
 
-    document.getElementById(
-        "damageLevel"
-    ).textContent =
-        upgrades.damage.level;
+  document.getElementById(
+    "bestScore"
+  ).textContent =
+    bestScore.toLocaleString();
 
-
-    document.getElementById(
-        "shieldLevel"
-    ).textContent =
-        upgrades.shield.level;
-
-
-    document.getElementById(
-        "hullLevel"
-    ).textContent =
-        upgrades.hull.level;
-
-
-    document.getElementById(
-        "speedLevel"
-    ).textContent =
-        upgrades.speed.level;
-
-
-    document.getElementById(
-        "fireCost"
-    ).textContent =
-        upgradeCost("fire").toFixed(2);
-
-
-    document.getElementById(
-        "damageCost"
-    ).textContent =
-        upgradeCost("damage").toFixed(2);
-
-
-    document.getElementById(
-        "shieldCost"
-    ).textContent =
-        upgradeCost("shield").toFixed(2);
-
-
-    document.getElementById(
-        "hullCost"
-    ).textContent =
-        upgradeCost("hull").toFixed(2);
-
-
-    document.getElementById(
-        "speedCost"
-    ).textContent =
-        upgradeCost("speed").toFixed(2);
+  document.getElementById(
+    "bestLevel"
+  ).textContent =
+    bestLevel;
 
 }
 
 
-/* =========================================================
-   START GAME
-========================================================= */
+function updateUpgradeUI(){
 
-function startGame() {
-
-    document.getElementById(
-        "startScreen"
-    ).style.display =
-        "none";
+  document.getElementById(
+    "upgradeMoney"
+  ).textContent =
+    money.toFixed(2);
 
 
-    document.getElementById(
-        "gameOverScreen"
-    ).style.display =
-        "none";
+  document.getElementById(
+    "fireLevel"
+  ).textContent =
+    upgrades.fire.level;
+
+  document.getElementById(
+    "damageLevel"
+  ).textContent =
+    upgrades.damage.level;
+
+  document.getElementById(
+    "shieldLevel"
+  ).textContent =
+    upgrades.shield.level;
+
+  document.getElementById(
+    "hullLevel"
+  ).textContent =
+    upgrades.hull.level;
+
+  document.getElementById(
+    "speedLevel"
+  ).textContent =
+    upgrades.speed.level;
 
 
-    document.getElementById(
-        "upgradeScreen"
-    ).style.display =
-        "none";
+  document.getElementById(
+    "fireCost"
+  ).textContent =
+    upgradeCost("fire").toFixed(2);
 
+  document.getElementById(
+    "damageCost"
+  ).textContent =
+    upgradeCost("damage").toFixed(2);
 
-    document.getElementById(
-        "ui"
-    ).style.display =
-        "flex";
+  document.getElementById(
+    "shieldCost"
+  ).textContent =
+    upgradeCost("shield").toFixed(2);
 
+  document.getElementById(
+    "hullCost"
+  ).textContent =
+    upgradeCost("hull").toFixed(2);
 
-    running = true;
-
-    level = 1;
-
-    score = 0;
-
-    playerShots = [];
-
-    enemyShots = [];
-
-    particles = [];
-
-    resetPlayer();
-
-    createEnemies();
-
-    updateUI();
+  document.getElementById(
+    "speedCost"
+  ).textContent =
+    upgradeCost("speed").toFixed(2);
 
 }
 
 
-/* =========================================================
+/* =====================================================
+   START
+===================================================== */
+
+function startGame(){
+
+  document.getElementById(
+    "startScreen"
+  ).style.display =
+    "none";
+
+  document.getElementById(
+    "gameOverScreen"
+  ).style.display =
+    "none";
+
+  document.getElementById(
+    "upgradeScreen"
+  ).style.display =
+    "none";
+
+  document.getElementById(
+    "ui"
+  ).style.display =
+    "flex";
+
+
+  running = true;
+
+  level = 1;
+
+  score = 0;
+
+  playerShots = [];
+
+  enemyShots = [];
+
+  particles = [];
+
+  resetPlayer();
+
+  createEnemies();
+
+  updateUI();
+
+}
+
+
+/* =====================================================
    GAME OVER
-========================================================= */
+===================================================== */
 
-function gameOver() {
+function gameOver(){
 
-    if (!running)
-        return;
-
-
-    running = false;
+  if(!running)
+    return;
 
 
-    /*
-       1000 SCORE = $0.50
-    */
-
-    const earned =
-        score * .0005;
+  running = false;
 
 
-    money +=
-        earned;
+  /*
+    $0.50 FOR EVERY 1,000 SCORE
+  */
+
+  const earned =
+    score * .0005;
 
 
-    document.getElementById(
-        "finalScore"
-    ).textContent =
-        score.toLocaleString();
+  money +=
+    earned;
 
 
-    document.getElementById(
-        "earnedMoney"
-    ).textContent =
-        earned.toFixed(2);
+  if(score > bestScore){
+
+    bestScore =
+      score;
+
+  }
 
 
-    document.getElementById(
-        "totalMoney"
-    ).textContent =
-        money.toFixed(2);
+  if(level > bestLevel){
+
+    bestLevel =
+      level;
+
+  }
 
 
-    document.getElementById(
-        "gameOverScreen"
-    ).style.display =
-        "flex";
+  /* SAVE EVERYTHING */
+
+  saveGame();
 
 
-    document.getElementById(
-        "ui"
-    ).style.display =
-        "none";
+  document.getElementById(
+    "finalScore"
+  ).textContent =
+    score.toLocaleString();
 
 
-    document.getElementById(
-        "bossUI"
-    ).style.display =
-        "none";
+  document.getElementById(
+    "gameOverBestScore"
+  ).textContent =
+    bestScore.toLocaleString();
 
 
-    updateMoneyUI();
+  document.getElementById(
+    "earnedMoney"
+  ).textContent =
+    earned.toFixed(2);
+
+
+  document.getElementById(
+    "totalMoney"
+  ).textContent =
+    money.toFixed(2);
+
+
+  document.getElementById(
+    "gameOverScreen"
+  ).style.display =
+    "flex";
+
+
+  document.getElementById(
+    "ui"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "bossUI"
+  ).style.display =
+    "none";
+
+
+  updateMoneyUI();
 
 }
 
 
-/* =========================================================
+/* =====================================================
    UPGRADES MENU
-========================================================= */
+===================================================== */
 
-function openUpgrades() {
+function openUpgrades(){
 
-    document.getElementById(
-        "startScreen"
-    ).style.display =
-        "none";
+  document.getElementById(
+    "startScreen"
+  ).style.display =
+    "none";
 
+  document.getElementById(
+    "gameOverScreen"
+  ).style.display =
+    "none";
 
-    document.getElementById(
-        "gameOverScreen"
-    ).style.display =
-        "none";
-
-
-    document.getElementById(
-        "upgradeScreen"
-    ).style.display =
-        "flex";
+  document.getElementById(
+    "upgradeScreen"
+  ).style.display =
+    "flex";
 
 
-    updateUpgradeUI();
+  updateUpgradeUI();
 
 }
 
 
-function closeUpgrades() {
+function closeUpgrades(){
+
+  document.getElementById(
+    "upgradeScreen"
+  ).style.display =
+    "none";
+
+
+  if(!running){
 
     document.getElementById(
-        "upgradeScreen"
+      "startScreen"
     ).style.display =
-        "none";
+      "flex";
 
-
-    if (!running) {
-
-        document.getElementById(
-            "startScreen"
-        ).style.display =
-            "flex";
-
-    }
+  }
 
 }
 
 
-/* =========================================================
-   KEYBOARD
-========================================================= */
+/* =====================================================
+   CONTROLS
+===================================================== */
 
 window.addEventListener(
-    "keydown",
-    e => {
+  "keydown",
+  function(e){
 
-        keys[e.key] = true;
+    keys[e.key] = true;
 
+    if(e.code === "Space"){
 
-        if (
-            e.code === "Space"
-        ) {
+      e.preventDefault();
 
-            e.preventDefault();
-
-            shooting = true;
-
-        }
+      shooting = true;
 
     }
+
+  }
 );
 
 
 window.addEventListener(
-    "keyup",
-    e => {
+  "keyup",
+  function(e){
 
-        keys[e.key] = false;
+    keys[e.key] = false;
 
+    if(e.code === "Space"){
 
-        if (
-            e.code === "Space"
-        ) {
-
-            shooting = false;
-
-        }
+      shooting = false;
 
     }
+
+  }
 );
 
 
-/* =========================================================
+/* =====================================================
+   RESIZE
+===================================================== */
+
+window.addEventListener(
+  "resize",
+  function(){
+
+    W = innerWidth;
+
+    H = innerHeight;
+
+    canvas.width = W;
+
+    canvas.height = H;
+
+    player.y =
+      H - 90;
+
+    createStars();
+
+  }
+);
+
+
+/* =====================================================
    GAME LOOP
-========================================================= */
+===================================================== */
 
-function loop(time) {
+function loop(time){
 
-    const dt =
-        Math.min(
-            (time - lastTime) /
-            1000,
-            .033
-        );
-
-
-    lastTime =
-        time;
-
-
-    update(dt);
-
-    draw();
-
-
-    requestAnimationFrame(
-        loop
+  const dt =
+    Math.min(
+      (time-lastTime)/1000,
+      .033
     );
 
+
+  lastTime =
+    time;
+
+
+  update(dt);
+
+  draw();
+
+
+  requestAnimationFrame(
+    loop
+  );
+
 }
 
 
-requestAnimationFrame(
-    loop
-);
+/* =====================================================
+   LOAD SAVED GAME
+===================================================== */
 
+loadGame();
 
-/* =========================================================
-   INITIALIZE
-========================================================= */
+applyUpgrades();
 
 updateMoneyUI();
+
 updateUpgradeUI();
+
+requestAnimationFrame(
+  loop
+);
 
 </script>
 
