@@ -15,111 +15,113 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #02030a;
-  color: white;
+  background: #010108;
   font-family: Arial, sans-serif;
-}
-
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: white;
 }
 
 #game {
   position: relative;
-  width: min(1100px, 100vw);
-  height: min(700px, 100vh);
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
-  background: #050818;
-  border: 2px solid #263b75;
-  box-shadow: 0 0 35px #101d55;
 }
 
 canvas {
-  display: block;
   width: 100%;
   height: 100%;
-  background:
-    radial-gradient(circle at 50% 20%, #111b43, #050818 45%, #02030a);
+  display: block;
+  background: #02020c;
 }
 
 #hud {
   position: absolute;
-  top: 12px;
+  top: 15px;
   left: 15px;
   right: 15px;
   display: flex;
   justify-content: space-between;
   pointer-events: none;
-  font-weight: bold;
-  text-shadow: 0 2px 4px black;
+  z-index: 5;
 }
 
-.panel {
-  background: rgba(4, 8, 25, .8);
-  border: 1px solid #314b91;
-  border-radius: 10px;
-  padding: 9px 12px;
-  min-width: 170px;
+.box {
+  background: rgba(3, 5, 20, .82);
+  border: 1px solid #394c91;
+  border-radius: 12px;
+  padding: 10px 15px;
+  min-width: 175px;
+  box-shadow: 0 0 15px rgba(50,80,255,.15);
+}
+
+.label {
+  font-size: 12px;
+  color: #aeb9e8;
+}
+
+.value {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
 }
 
 .bar {
-  height: 9px;
   width: 150px;
-  margin-top: 5px;
-  background: #171b2d;
-  border-radius: 99px;
+  height: 8px;
+  background: #171827;
+  border-radius: 10px;
   overflow: hidden;
+  margin: 3px 0 8px;
 }
 
-.fill {
+#health {
   height: 100%;
-  transition: width .15s;
+  width: 100%;
+  background: #ff315c;
 }
 
-#hpFill {
-  background: #ff405f;
+#shield {
+  height: 100%;
+  width: 100%;
+  background: #32aaff;
 }
 
-#shieldFill {
-  background: #36a8ff;
-}
-
-#message {
+#screen {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  z-index: 10;
+  background: rgba(0,0,10,.35);
 }
 
 .card {
   text-align: center;
-  background: rgba(2, 5, 18, .94);
-  border: 1px solid #4162ba;
-  border-radius: 18px;
-  padding: 28px 35px;
-  box-shadow: 0 0 40px rgba(45, 91, 255, .25);
+  padding: 35px;
+  border-radius: 20px;
+  background: rgba(3,5,20,.94);
+  border: 1px solid #455db0;
+  box-shadow: 0 0 50px rgba(50,70,255,.3);
 }
 
 h1 {
-  margin: 0 0 10px;
-  font-size: 42px;
-  letter-spacing: 3px;
+  margin: 0 0 12px;
+  font-size: 48px;
+  letter-spacing: 5px;
 }
 
-p {
-  margin: 8px 0;
-  color: #cbd5ff;
+.card p {
+  color: #cbd3ff;
+  margin: 8px;
 }
 
 button {
-  margin-top: 15px;
+  margin-top: 18px;
+  padding: 13px 28px;
   border: 0;
   border-radius: 10px;
-  padding: 12px 24px;
-  background: #416cff;
+  background: #426aff;
   color: white;
   font-size: 17px;
   font-weight: bold;
@@ -127,19 +129,20 @@ button {
 }
 
 button:hover {
-  background: #6387ff;
+  background: #6485ff;
 }
 
 .hidden {
   display: none !important;
 }
 
-#tip {
+#controls {
   position: absolute;
   bottom: 12px;
+  left: 0;
   width: 100%;
   text-align: center;
-  color: #9da9d3;
+  color: #8995c5;
   font-size: 13px;
   pointer-events: none;
 }
@@ -154,36 +157,43 @@ button:hover {
 
 <div id="hud">
 
-  <div class="panel">
-    <div>LEVEL <span id="level">1</span></div>
-    <div>ENEMIES <span id="enemies">0</span></div>
-    <div>SCORE <span id="score">0</span></div>
+  <div class="box">
+    <div class="label">LEVEL</div>
+    <div class="value" id="level">1</div>
+
+    <div class="label">ENEMIES</div>
+    <div class="value" id="enemyCount">0</div>
+
+    <div class="label">SCORE</div>
+    <div class="value" id="score">0</div>
   </div>
 
-  <div class="panel">
-    <div>HULL</div>
+  <div class="box">
+
+    <div class="label">HULL</div>
+
     <div class="bar">
-      <div id="hpFill" class="fill" style="width:100%"></div>
+      <div id="health"></div>
     </div>
 
-    <div>SHIELD</div>
+    <div class="label">SHIELD</div>
+
     <div class="bar">
-      <div id="shieldFill" class="fill" style="width:100%"></div>
+      <div id="shield"></div>
     </div>
+
   </div>
 
 </div>
 
-<div id="message">
+<div id="screen">
 
-  <div class="card">
+  <div class="card" id="card">
 
     <h1>SPACE BATTLE</h1>
 
-    <p>Destroy every enemy ship to advance.</p>
-
+    <p>Destroy all enemy energy ships.</p>
     <p><b>A / D</b> or <b>← / →</b> to move</p>
-
     <p><b>SPACE</b> to fire</p>
 
     <button id="start">START GAME</button>
@@ -192,8 +202,8 @@ button:hover {
 
 </div>
 
-<div id="tip">
-A/D or ←/→ = move &nbsp; • &nbsp; SPACE = shoot
+<div id="controls">
+  A / D or ← / → = Move &nbsp; | &nbsp; SPACE = Shoot
 </div>
 
 </div>
@@ -203,17 +213,7 @@ A/D or ←/→ = move &nbsp; • &nbsp; SPACE = shoot
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const levelText = document.getElementById("level");
-const enemyText = document.getElementById("enemies");
-const scoreText = document.getElementById("score");
-
-const hpFill = document.getElementById("hpFill");
-const shieldFill = document.getElementById("shieldFill");
-
-const message = document.getElementById("message");
-const startButton = document.getElementById("start");
-
-let W = 1100;
+let W = 1200;
 let H = 700;
 
 let running = false;
@@ -221,100 +221,102 @@ let level = 1;
 let score = 0;
 let lastTime = 0;
 
-let enemyBullets = [];
-let playerBullets = [];
-let enemies = [];
-let stars = [];
-let particles = [];
-
 const keys = {};
 
+let enemies = [];
+let playerShots = [];
+let enemyShots = [];
+let particles = [];
+let stars = [];
+
 const player = {
-
-  x: W / 2,
-  y: H - 95,
-
-  w: 48,
-  h: 42,
-
-  speed: 440,
-
+  x: 600,
+  y: 620,
+  speed: 450,
   hp: 100,
   shield: 100,
-
   cooldown: 0
-
 };
 
 
+/* =========================
+   RESIZE
+========================= */
+
 function resize() {
 
-  const rect = canvas.getBoundingClientRect();
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
 
-  W = canvas.width = Math.max(600, Math.floor(rect.width));
-  H = canvas.height = Math.max(400, Math.floor(rect.height));
-
-  player.y = H - 85;
+  player.y = H - 100;
 
   player.x = Math.max(
     35,
     Math.min(W - 35, player.x)
   );
-
 }
-
 
 window.addEventListener("resize", resize);
 
 
-function makeStars() {
+/* =========================
+   STARS
+========================= */
+
+function createStars() {
 
   stars = [];
 
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 180; i++) {
 
     stars.push({
-
       x: Math.random() * W,
       y: Math.random() * H,
-
-      r: Math.random() * 1.7 + .3,
-
-      speed: Math.random() * 35 + 10
-
+      size: Math.random() * 2 + .3,
+      speed: Math.random() * 35 + 10,
+      brightness: Math.random()
     });
 
   }
-
 }
 
+
+/* =========================
+   ENEMIES
+========================= */
 
 function createEnemies() {
 
   enemies = [];
 
-  const count = Math.min(3 + level * 2, 20);
+  const count = Math.min(
+    4 + level * 2,
+    22
+  );
 
-  const rows = Math.ceil(count / 6);
-  const cols = Math.min(6, count);
+  const columns = Math.min(
+    6,
+    count
+  );
+
+  const spacing =
+    Math.min(145, W / (columns + 1));
 
   for (let i = 0; i < count; i++) {
 
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-
-    const spacing =
-      Math.min(125, W / (cols + 1));
+    const column = i % columns;
+    const row = Math.floor(i / columns);
 
     const baseX =
       W / 2 +
-      (col - (cols - 1) / 2) * spacing;
+      (column - (columns - 1) / 2) *
+      spacing;
 
     const baseY =
-      110 + row * 70;
+      120 + row * 85;
 
     const hp =
-      1 + Math.floor((level - 1) / 2);
+      2 + Math.floor(level / 3);
 
     enemies.push({
 
@@ -323,27 +325,32 @@ function createEnemies() {
 
       y: baseY,
 
-      w: 46,
-      h: 34,
-
       hp: hp,
       maxHp: hp,
 
-      phase: Math.random() * Math.PI * 2,
+      phase:
+        Math.random() * Math.PI * 2,
 
-      amplitude:
-        Math.min(100 + level * 5, W * .22),
+      movementSpeed:
+        .7 + Math.random() * .5,
 
-      speed:
-        .8 +
-        Math.random() * .7 +
-        level * .04,
+      movementWidth:
+        Math.min(
+          130 + level * 5,
+          W * .2
+        ),
 
-      fireTimer:
-        .6 + Math.random() * 2,
+      shootTimer:
+        Math.random() * 2,
 
-      fireRate:
-        Math.max(.4, 1.7 - level * .07)
+      shootRate:
+        Math.max(
+          .45,
+          1.5 - level * .05
+        ),
+
+      rotation:
+        Math.random() * Math.PI * 2
 
     });
 
@@ -352,171 +359,190 @@ function createEnemies() {
 }
 
 
-function resetGame() {
+/* =========================
+   START
+========================= */
+
+function startGame() {
+
+  resize();
 
   level = 1;
   score = 0;
 
   player.hp = 100;
   player.shield = 100;
-
   player.x = W / 2;
 
-  playerBullets = [];
-  enemyBullets = [];
+  playerShots = [];
+  enemyShots = [];
   particles = [];
 
+  createStars();
   createEnemies();
 
-  updateHUD();
-
-}
-
-
-function startGame() {
-
-  resize();
-
-  resetGame();
-
-  makeStars();
+  document.getElementById(
+    "screen"
+  ).classList.add("hidden");
 
   running = true;
-
-  message.classList.add("hidden");
 
   lastTime = performance.now();
 
   requestAnimationFrame(loop);
-
 }
 
+document.getElementById(
+  "start"
+).onclick = startGame;
 
-startButton.addEventListener(
-  "click",
-  startGame
+
+/* =========================
+   KEYBOARD
+========================= */
+
+window.addEventListener(
+  "keydown",
+  e => {
+
+    keys[e.key.toLowerCase()] = true;
+
+    if (e.code === "Space") {
+      keys.space = true;
+      e.preventDefault();
+    }
+
+    if (
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight"
+    ) {
+      e.preventDefault();
+    }
+
+  }
+);
+
+window.addEventListener(
+  "keyup",
+  e => {
+
+    keys[e.key.toLowerCase()] = false;
+
+    if (e.code === "Space") {
+      keys.space = false;
+    }
+
+  }
 );
 
 
-window.addEventListener("keydown", e => {
+/* =========================
+   PLAYER SHOOT
+========================= */
 
-  keys[e.key.toLowerCase()] = true;
+function playerShoot() {
 
-  if (
-    [
-      "arrowleft",
-      "arrowright",
-      " ",
-      "a",
-      "d"
-    ].includes(e.key.toLowerCase())
-  ) {
+  if (player.cooldown > 0)
+    return;
 
-    e.preventDefault();
-
-  }
-
-  if (e.code === "Space") {
-
-    keys.space = true;
-
-  }
-
-});
-
-
-window.addEventListener("keyup", e => {
-
-  keys[e.key.toLowerCase()] = false;
-
-  if (e.code === "Space") {
-
-    keys.space = false;
-
-  }
-
-});
-
-
-function shootPlayer() {
-
-  if (player.cooldown > 0) return;
-
-  playerBullets.push({
+  playerShots.push({
 
     x: player.x,
-    y: player.y - 25,
+    y: player.y - 30,
 
-    vy: -650,
+    speed: 700,
 
-    r: 4,
-
-    damage: 1
+    radius: 4
 
   });
 
-  player.cooldown = .18;
-
+  player.cooldown = .16;
 }
 
+
+/* =========================
+   ENEMY SHOOT
+========================= */
 
 function enemyShoot(enemy) {
 
-  enemyBullets.push({
+  enemyShots.push({
 
     x: enemy.x,
-    y: enemy.y + 20,
+    y: enemy.y + 28,
 
-    vy: 260 + level * 12,
+    speed:
+      250 + level * 15,
 
-    r: 5,
-
-    damage:
-      10 + Math.min(level * 1.2, 12)
+    radius: 6
 
   });
 
 }
 
 
-function damagePlayer(amount) {
+/* =========================
+   PLAYER DAMAGE
+========================= */
+
+function hurtPlayer(amount) {
 
   if (player.shield > 0) {
 
     const absorbed =
-      Math.min(player.shield, amount);
+      Math.min(
+        player.shield,
+        amount
+      );
 
     player.shield -= absorbed;
 
     amount -= absorbed;
-
   }
 
   player.hp -= amount;
 
-  burst(
+  explosion(
     player.x,
     player.y,
-    8,
-    "#55b9ff"
+    "#38bfff",
+    8
   );
 
   if (player.hp <= 0) {
 
     player.hp = 0;
 
-    running = false;
-
-    showEnd(false);
+    gameOver();
 
   }
-
 }
 
 
-function burst(x, y, amount, color) {
+/* =========================
+   EXPLOSIONS
+========================= */
 
-  for (let i = 0; i < amount; i++) {
+function explosion(
+  x,
+  y,
+  color,
+  amount
+) {
+
+  for (
+    let i = 0;
+    i < amount;
+    i++
+  ) {
+
+    const angle =
+      Math.random() *
+      Math.PI * 2;
+
+    const speed =
+      Math.random() *
+      220 + 40;
 
     particles.push({
 
@@ -524,87 +550,69 @@ function burst(x, y, amount, color) {
       y: y,
 
       vx:
-        (Math.random() - .5) * 220,
+        Math.cos(angle) *
+        speed,
 
       vy:
-        (Math.random() - .5) * 220,
+        Math.sin(angle) *
+        speed,
 
       life:
-        .35 + Math.random() * .45,
+        .3 +
+        Math.random() *
+        .6,
+
+      size:
+        Math.random() * 4 + 1,
 
       color: color
 
     });
 
   }
-
 }
 
 
-function nextLevel() {
-
-  level++;
-
-  player.hp =
-    Math.min(100, player.hp + 12);
-
-  player.shield =
-    Math.min(100, player.shield + 25);
-
-  createEnemies();
-
-  updateHUD();
-
-}
-
+/* =========================
+   UPDATE
+========================= */
 
 function update(dt) {
 
-  /*
-    PLAYER MOVEMENT
+  /* PLAYER */
 
-    Player stays on the same
-    horizontal level.
-  */
-
-  let dir = 0;
+  let direction = 0;
 
   if (
     keys["a"] ||
     keys["arrowleft"]
   ) {
-
-    dir--;
-
+    direction--;
   }
 
   if (
     keys["d"] ||
     keys["arrowright"]
   ) {
-
-    dir++;
-
+    direction++;
   }
 
   player.x +=
-    dir * player.speed * dt;
+    direction *
+    player.speed *
+    dt;
 
   player.x =
     Math.max(
-      30,
-      Math.min(W - 30, player.x)
+      35,
+      Math.min(
+        W - 35,
+        player.x
+      )
     );
 
-
-  /*
-    SHOOTING
-  */
-
   if (keys.space) {
-
-    shootPlayer();
-
+    playerShoot();
   }
 
   player.cooldown =
@@ -614,13 +622,7 @@ function update(dt) {
     );
 
 
-  /*
-    ENEMY MOVEMENT
-
-    Enemies stay on their
-    horizontal level and move
-    side-to-side.
-  */
+  /* ENEMIES */
 
   for (const enemy of enemies) {
 
@@ -628,101 +630,87 @@ function update(dt) {
       enemy.baseX +
       Math.sin(
         performance.now() *
-        0.001 *
-        enemy.speed +
+        .001 *
+        enemy.movementSpeed +
         enemy.phase
       ) *
-      enemy.amplitude;
+      enemy.movementWidth;
 
     enemy.x =
       Math.max(
-        30,
-        Math.min(W - 30, enemy.x)
+        35,
+        Math.min(
+          W - 35,
+          enemy.x
+        )
       );
 
+    enemy.shootTimer -= dt;
 
-    /*
-      ENEMY SHOOTING
-    */
-
-    enemy.fireTimer -= dt;
-
-    if (enemy.fireTimer <= 0) {
+    if (
+      enemy.shootTimer <= 0
+    ) {
 
       enemyShoot(enemy);
 
-      enemy.fireTimer =
-        enemy.fireRate +
-        Math.random() * .9;
+      enemy.shootTimer =
+        enemy.shootRate +
+        Math.random() * .7;
 
     }
 
-  }
-
-
-  /*
-    PLAYER BULLETS
-  */
-
-  for (const bullet of playerBullets) {
-
-    bullet.y +=
-      bullet.vy * dt;
+    enemy.rotation += dt;
 
   }
 
-  playerBullets =
-    playerBullets.filter(
-      b => b.y > -20
-    );
 
+  /* PLAYER SHOTS */
 
-  /*
-    ENEMY BULLETS
-  */
+  for (const shot of playerShots) {
 
-  for (const bullet of enemyBullets) {
-
-    bullet.y +=
-      bullet.vy * dt;
+    shot.y -=
+      shot.speed * dt;
 
   }
 
-  enemyBullets =
-    enemyBullets.filter(
-      b => b.y < H + 20
-    );
+
+  /* ENEMY SHOTS */
+
+  for (const shot of enemyShots) {
+
+    shot.y +=
+      shot.speed * dt;
+
+  }
 
 
-  /*
-    PLAYER BULLETS HIT ENEMIES
-  */
+  /* PLAYER SHOT COLLISIONS */
 
-  for (const bullet of playerBullets) {
+  for (const shot of playerShots) {
 
     for (const enemy of enemies) {
 
-      if (
-        !enemy.dead &&
-        Math.abs(
-          bullet.x - enemy.x
-        ) < 27 &&
-        Math.abs(
-          bullet.y - enemy.y
-        ) < 23
-      ) {
+      if (enemy.dead)
+        continue;
 
-        bullet.dead = true;
-
-        enemy.hp -= bullet.damage;
-
-        burst(
-          bullet.x,
-          bullet.y,
-          4,
-          "#7fd7ff"
+      const distance =
+        Math.hypot(
+          shot.x - enemy.x,
+          shot.y - enemy.y
         );
 
+      if (distance < 32) {
+
+        shot.dead = true;
+
+        enemy.hp--;
+
+        explosion(
+          shot.x,
+          shot.y,
+          "#ff75a5",
+          5
+        );
 
         if (enemy.hp <= 0) {
 
@@ -731,17 +719,16 @@ function update(dt) {
           score +=
             100 * level;
 
-          burst(
+          explosion(
             enemy.x,
             enemy.y,
-            22,
-            "#ff5b75"
+            "#ff174f",
+            30
           );
 
         }
 
         break;
-
       }
 
     }
@@ -749,62 +736,64 @@ function update(dt) {
   }
 
 
-  playerBullets =
-    playerBullets.filter(
-      b => !b.dead
+  playerShots =
+    playerShots.filter(
+      shot =>
+        !shot.dead &&
+        shot.y > -30
     );
+
 
   enemies =
     enemies.filter(
-      e => !e.dead
+      enemy =>
+        !enemy.dead
     );
 
 
-  /*
-    ENEMY BULLETS HIT PLAYER
-  */
+  /* ENEMY SHOT COLLISIONS */
 
-  for (const bullet of enemyBullets) {
+  for (const shot of enemyShots) {
 
-    if (
-      Math.abs(
-        bullet.x - player.x
-      ) < 28 &&
-      Math.abs(
-        bullet.y - player.y
-      ) < 25
-    ) {
-
-      bullet.dead = true;
-
-      damagePlayer(
-        bullet.damage
+    const distance =
+      Math.hypot(
+        shot.x - player.x,
+        shot.y - player.y
       );
+
+    if (distance < 32) {
+
+      shot.dead = true;
+
+      hurtPlayer(12);
 
     }
 
   }
 
 
-  enemyBullets =
-    enemyBullets.filter(
-      b => !b.dead
+  enemyShots =
+    enemyShots.filter(
+      shot =>
+        !shot.dead &&
+        shot.y < H + 40
     );
 
 
-  /*
-    EXPLOSION PARTICLES
-  */
+  /* PARTICLES */
 
-  for (const particle of particles) {
+  for (const p of particles) {
 
-    particle.x +=
-      particle.vx * dt;
+    p.x +=
+      p.vx * dt;
 
-    particle.y +=
-      particle.vy * dt;
+    p.y +=
+      p.vy * dt;
 
-    particle.life -= dt;
+    p.vx *= .98;
+    p.vy *= .98;
+
+    p.life -= dt;
 
   }
 
@@ -814,156 +803,111 @@ function update(dt) {
     );
 
 
-  /*
-    NEXT LEVEL
-  */
+  /* SHIELD RECHARGE */
+
+  player.shield =
+    Math.min(
+      100,
+      player.shield +
+      dt * 4
+    );
+
+
+  /* NEXT LEVEL */
 
   if (
     enemies.length === 0 &&
     running
   ) {
 
-    nextLevel();
+    level++;
+
+    player.hp =
+      Math.min(
+        100,
+        player.hp + 15
+      );
+
+    player.shield =
+      Math.min(
+        100,
+        player.shield + 30
+      );
+
+    createEnemies();
 
   }
-
-
-  /*
-    SHIELD RECHARGES
-  */
-
-  player.shield =
-    Math.min(
-      100,
-      player.shield + dt * 3
-    );
 
 
   updateHUD();
-
 }
 
+
+/* =========================
+   HUD
+========================= */
 
 function updateHUD() {
 
-  levelText.textContent =
-    level;
+  document.getElementById(
+    "level"
+  ).textContent = level;
 
-  enemyText.textContent =
+  document.getElementById(
+    "enemyCount"
+  ).textContent =
     enemies.length;
 
-  scoreText.textContent =
-    score;
+  document.getElementById(
+    "score"
+  ).textContent = score;
 
-  hpFill.style.width =
+  document.getElementById(
+    "health"
+  ).style.width =
     player.hp + "%";
 
-  shieldFill.style.width =
+  document.getElementById(
+    "shield"
+  ).style.width =
     player.shield + "%";
-
 }
 
 
-function drawShip(x, y, playerShip) {
+/* =========================
+   DRAW BACKGROUND
+========================= */
 
-  ctx.save();
+function drawBackground() {
 
-  ctx.translate(x, y);
+  const gradient =
+    ctx.createRadialGradient(
+      W / 2,
+      H / 2,
+      0,
+      W / 2,
+      H / 2,
+      Math.max(W, H)
+    );
 
+  gradient.addColorStop(
+    0,
+    "#10102d"
+  );
 
-  /*
-    PLAYER SHIP
-  */
+  gradient.addColorStop(
+    .5,
+    "#05051a"
+  );
 
-  if (playerShip) {
+  gradient.addColorStop(
+    1,
+    "#010108"
+  );
 
-    ctx.fillStyle = "#54b8ff";
+  ctx.fillStyle = gradient;
 
-    ctx.beginPath();
-
-    ctx.moveTo(0, -28);
-    ctx.lineTo(-25, 23);
-    ctx.lineTo(0, 14);
-    ctx.lineTo(25, 23);
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    ctx.fillStyle = "#dff6ff";
-
-    ctx.beginPath();
-
-    ctx.moveTo(0, -17);
-    ctx.lineTo(-8, 7);
-    ctx.lineTo(8, 7);
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    ctx.fillStyle = "#ffdb45";
-
-    ctx.beginPath();
-
-    ctx.moveTo(-10, 22);
-    ctx.lineTo(0, 38);
-    ctx.lineTo(10, 22);
-
-    ctx.closePath();
-
-    ctx.fill();
-
-  }
-
-
-  /*
-    ENEMY SHIP
-  */
-
-  else {
-
-    ctx.fillStyle = "#ff4967";
-
-    ctx.beginPath();
-
-    ctx.moveTo(0, 27);
-    ctx.lineTo(-25, -20);
-    ctx.lineTo(-7, -13);
-    ctx.lineTo(0, -29);
-    ctx.lineTo(7, -13);
-    ctx.lineTo(25, -20);
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    ctx.fillStyle = "#ffd1d8";
-
-    ctx.beginPath();
-
-    ctx.moveTo(0, 16);
-    ctx.lineTo(-8, -8);
-    ctx.lineTo(8, -8);
-
-    ctx.closePath();
-
-    ctx.fill();
-
-  }
-
-
-  ctx.restore();
-
-}
-
-
-function draw() {
-
-  ctx.clearRect(
+  ctx.fillRect(
     0,
     0,
     W,
@@ -971,23 +915,32 @@ function draw() {
   );
 
 
-  /*
-    STARS
-  */
-
-  ctx.fillStyle = "#fff";
+  /* STARS */
 
   for (const star of stars) {
 
+    star.y +=
+      star.speed *
+      .016;
+
+    if (star.y > H) {
+      star.y = 0;
+    }
+
     ctx.globalAlpha =
-      .35 + star.r / 3;
+      .3 +
+      star.brightness *
+      .7;
+
+    ctx.fillStyle =
+      "#ffffff";
 
     ctx.beginPath();
 
     ctx.arc(
       star.x,
       star.y,
-      star.r,
+      star.size,
       0,
       Math.PI * 2
     );
@@ -999,22 +952,17 @@ function draw() {
   ctx.globalAlpha = 1;
 
 
-  /*
-    HORIZONTAL LEVEL LINES
-  */
+  /* HORIZONTAL ENERGY LINES */
 
   ctx.strokeStyle =
-    "rgba(75,110,190,.12)";
+    "rgba(80,80,180,.12)";
 
-  ctx.setLineDash([
-    8,
-    14
-  ]);
+  ctx.lineWidth = 1;
 
   for (
-    let y = 70;
+    let y = 100;
     y < H;
-    y += 90
+    y += 100
   ) {
 
     ctx.beginPath();
@@ -1026,140 +974,451 @@ function draw() {
 
   }
 
-  ctx.setLineDash([]);
+}
 
 
-  /*
-    ENEMY SHIPS
-  */
+/* =========================
+   PLAYER SHIP
+========================= */
 
-  for (const enemy of enemies) {
+function drawPlayer() {
 
-    drawShip(
-      enemy.x,
-      enemy.y,
-      false
-    );
+  ctx.save();
 
-
-    /*
-      ENEMY HEALTH BAR
-    */
-
-    ctx.fillStyle =
-      "rgba(0,0,0,.5)";
-
-    ctx.fillRect(
-      enemy.x - 22,
-      enemy.y - 38,
-      44,
-      5
-    );
-
-
-    ctx.fillStyle =
-      "#ff4967";
-
-    ctx.fillRect(
-      enemy.x - 22,
-      enemy.y - 38,
-      44 *
-      enemy.hp /
-      enemy.maxHp,
-      5
-    );
-
-  }
-
-
-  /*
-    PLAYER
-  */
-
-  drawShip(
+  ctx.translate(
     player.x,
-    player.y,
-    true
+    player.y
+  );
+
+  ctx.shadowBlur = 25;
+  ctx.shadowColor =
+    "#20aaff";
+
+  /* wings */
+
+  ctx.fillStyle =
+    "#168ddd";
+
+  ctx.beginPath();
+
+  ctx.moveTo(0, -35);
+  ctx.lineTo(-35, 27);
+  ctx.lineTo(-8, 17);
+  ctx.lineTo(0, 28);
+  ctx.lineTo(8, 17);
+  ctx.lineTo(35, 27);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  /* cockpit */
+
+  ctx.shadowBlur = 10;
+
+  ctx.fillStyle =
+    "#e9fbff";
+
+  ctx.beginPath();
+
+  ctx.moveTo(0, -22);
+  ctx.lineTo(-9, 8);
+  ctx.lineTo(9, 8);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  /* engine */
+
+  ctx.shadowBlur = 20;
+  ctx.shadowColor =
+    "#fff000";
+
+  ctx.fillStyle =
+    "#fff000";
+
+  ctx.beginPath();
+
+  ctx.moveTo(-9, 18);
+  ctx.lineTo(0, 42);
+  ctx.lineTo(9, 18);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+  ctx.restore();
+}
+
+
+/* =========================
+   ENERGY ENEMY
+========================= */
+
+function drawEnemy(enemy) {
+
+  ctx.save();
+
+  ctx.translate(
+    enemy.x,
+    enemy.y
+  );
+
+  /*
+    The enemy is designed as
+    a sharp, glowing red/pink
+    energy creature.
+  */
+
+  const pulse =
+    1 +
+    Math.sin(
+      performance.now() *
+      .006 +
+      enemy.phase
+    ) * .08;
+
+  ctx.scale(
+    pulse,
+    pulse
   );
 
 
-  /*
-    PLAYER BULLETS
-  */
+  /* OUTER GLOW */
 
-  for (const bullet of playerBullets) {
-
-    ctx.fillStyle =
-      "#66d9ff";
-
-    ctx.shadowBlur = 12;
-    ctx.shadowColor =
-      "#66d9ff";
-
-    ctx.fillRect(
-      bullet.x - 2,
-      bullet.y - 10,
-      4,
-      18
-    );
-
-    ctx.shadowBlur = 0;
-
-  }
+  ctx.shadowBlur = 35;
+  ctx.shadowColor =
+    "#ff003c";
 
 
-  /*
-    ENEMY BULLETS
-  */
+  /* MAIN SPIKY SHAPE */
 
-  for (const bullet of enemyBullets) {
+  ctx.fillStyle =
+    "#ff0648";
 
-    ctx.fillStyle =
-      "#ff506e";
+  ctx.beginPath();
 
-    ctx.shadowBlur = 12;
+  ctx.moveTo(0, -38);
 
-    ctx.shadowColor =
-      "#ff506e";
+  ctx.lineTo(8, -20);
+
+  ctx.lineTo(22, -31);
+
+  ctx.lineTo(18, -12);
+
+  ctx.lineTo(38, -4);
+
+  ctx.lineTo(19, 5);
+
+  ctx.lineTo(31, 23);
+
+  ctx.lineTo(11, 14);
+
+  ctx.lineTo(5, 37);
+
+  ctx.lineTo(-5, 16);
+
+  ctx.lineTo(-28, 29);
+
+  ctx.lineTo(-18, 8);
+
+  ctx.lineTo(-39, 2);
+
+  ctx.lineTo(-19, -8);
+
+  ctx.lineTo(-26, -29);
+
+  ctx.lineTo(-8, -19);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  /* SECOND ENERGY LAYER */
+
+  ctx.shadowBlur = 25;
+  ctx.shadowColor =
+    "#ff55a0";
+
+  ctx.fillStyle =
+    "#ff3974";
+
+  ctx.beginPath();
+
+  ctx.moveTo(0, -27);
+
+  ctx.lineTo(13, -8);
+
+  ctx.lineTo(28, 0);
+
+  ctx.lineTo(12, 9);
+
+  ctx.lineTo(0, 27);
+
+  ctx.lineTo(-12, 9);
+
+  ctx.lineTo(-28, 0);
+
+  ctx.lineTo(-12, -9);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  /* HOT WHITE CENTER */
+
+  ctx.shadowBlur = 30;
+  ctx.shadowColor =
+    "#ffffff";
+
+  ctx.fillStyle =
+    "#fff4fa";
+
+  ctx.beginPath();
+
+  ctx.moveTo(0, -12);
+  ctx.lineTo(9, 0);
+  ctx.lineTo(0, 13);
+  ctx.lineTo(-9, 0);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+
+  /* ENERGY LIGHTNING */
+
+  ctx.strokeStyle =
+    "#ffb7d0";
+
+  ctx.lineWidth = 3;
+
+  ctx.shadowBlur = 20;
+  ctx.shadowColor =
+    "#ff0055";
+
+  ctx.beginPath();
+
+  ctx.moveTo(-5, -34);
+  ctx.lineTo(-13, -18);
+  ctx.lineTo(-6, -13);
+  ctx.lineTo(-19, 0);
+  ctx.lineTo(-10, 0);
+  ctx.lineTo(-18, 17);
+
+  ctx.stroke();
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(6, -34);
+  ctx.lineTo(14, -18);
+  ctx.lineTo(7, -12);
+  ctx.lineTo(19, 0);
+  ctx.lineTo(10, 1);
+  ctx.lineTo(18, 18);
+
+  ctx.stroke();
+
+
+  /* ENERGY SPARKS */
+
+  ctx.shadowBlur = 15;
+  ctx.shadowColor =
+    "#ff1660";
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  for (
+    let i = 0;
+    i < 6;
+    i++
+  ) {
+
+    const angle =
+      performance.now() *
+      .002 +
+      enemy.phase +
+      i;
+
+    const distance =
+      35 +
+      Math.sin(
+        performance.now() *
+        .005 +
+        i
+      ) * 8;
+
+    const x =
+      Math.cos(angle) *
+      distance;
+
+    const y =
+      Math.sin(angle) *
+      distance;
 
     ctx.beginPath();
 
     ctx.arc(
-      bullet.x,
-      bullet.y,
-      bullet.r,
+      x,
+      y,
+      1.7,
       0,
       Math.PI * 2
     );
 
     ctx.fill();
 
-    ctx.shadowBlur = 0;
+  }
+
+
+  ctx.restore();
+
+
+  /* ENEMY HEALTH BAR */
+
+  const barWidth = 55;
+
+  ctx.fillStyle =
+    "rgba(0,0,0,.6)";
+
+  ctx.fillRect(
+    enemy.x - barWidth / 2,
+    enemy.y - 50,
+    barWidth,
+    5
+  );
+
+  ctx.fillStyle =
+    "#ff174f";
+
+  ctx.fillRect(
+    enemy.x - barWidth / 2,
+    enemy.y - 50,
+    barWidth *
+    enemy.hp /
+    enemy.maxHp,
+    5
+  );
+
+}
+
+
+/* =========================
+   BULLETS
+========================= */
+
+function drawBullets() {
+
+  /* PLAYER */
+
+  for (const shot of playerShots) {
+
+    ctx.save();
+
+    ctx.shadowBlur = 18;
+    ctx.shadowColor =
+      "#49d7ff";
+
+    ctx.fillStyle =
+      "#bdf5ff";
+
+    ctx.fillRect(
+      shot.x - 3,
+      shot.y - 12,
+      6,
+      24
+    );
+
+    ctx.restore();
 
   }
 
 
-  /*
-    EXPLOSIONS
-  */
+  /* ENEMY ENERGY SHOTS */
 
-  for (const particle of particles) {
+  for (const shot of enemyShots) {
 
-    ctx.globalAlpha =
-      Math.max(
-        0,
-        particle.life
-      );
+    ctx.save();
+
+    ctx.shadowBlur = 25;
+    ctx.shadowColor =
+      "#ff0055";
 
     ctx.fillStyle =
-      particle.color;
+      "#ff3c75";
 
     ctx.beginPath();
 
     ctx.arc(
-      particle.x,
-      particle.y,
-      3,
+      shot.x,
+      shot.y,
+      shot.radius,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.strokeStyle =
+      "#ffb1ca";
+
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      shot.x,
+      shot.y - 13
+    );
+
+    ctx.lineTo(
+      shot.x,
+      shot.y + 13
+    );
+
+    ctx.stroke();
+
+    ctx.restore();
+
+  }
+
+}
+
+
+/* =========================
+   PARTICLES
+========================= */
+
+function drawParticles() {
+
+  for (const p of particles) {
+
+    ctx.globalAlpha =
+      Math.max(
+        0,
+        p.life
+      );
+
+    ctx.fillStyle =
+      p.color;
+
+    ctx.shadowBlur = 15;
+    ctx.shadowColor =
+      p.color;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      p.size,
       0,
       Math.PI * 2
     );
@@ -1169,84 +1428,96 @@ function draw() {
   }
 
   ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+}
+
+
+/* =========================
+   DRAW
+========================= */
+
+function draw() {
+
+  drawBackground();
+
+  for (const enemy of enemies) {
+    drawEnemy(enemy);
+  }
+
+  drawPlayer();
+
+  drawBullets();
+
+  drawParticles();
 
 }
 
 
-function showEnd(won) {
+/* =========================
+   GAME OVER
+========================= */
 
-  message.classList.remove(
+function gameOver() {
+
+  running = false;
+
+  document.getElementById(
+    "screen"
+  ).classList.remove(
     "hidden"
   );
 
-
-  message.querySelector(
-    ".card"
+  document.getElementById(
+    "card"
   ).innerHTML = `
 
-    <h1>
-      ${won ? "VICTORY!" : "GAME OVER"}
-    </h1>
+    <h1>GAME OVER</h1>
 
-    <p>
-      ${
-        won
-        ? "You cleared the galaxy!"
-        : "Your ship was destroyed."
-      }
-    </p>
+    <p>Your ship was destroyed.</p>
 
-    <p>
-      Score:
-      <b>${score}</b>
-    </p>
+    <p>Score: <b>${score}</b></p>
 
-    <button id="restart">
-      ${won ? "PLAY AGAIN" : "TRY AGAIN"}
+    <button onclick="startGame()">
+      PLAY AGAIN
     </button>
 
   `;
 
-
-  document.getElementById(
-    "restart"
-  ).onclick = startGame;
-
 }
 
 
-function loop(now) {
+/* =========================
+   GAME LOOP
+========================= */
 
-  if (!running) return;
+function loop(time) {
 
+  if (!running)
+    return;
 
   const dt =
     Math.min(
-      (now - lastTime) / 1000,
+      (time - lastTime) / 1000,
       .033
     );
 
-  lastTime = now;
-
+  lastTime = time;
 
   update(dt);
 
   draw();
 
-
-  if (running) {
-
-    requestAnimationFrame(
-      loop
-    );
-
-  }
-
+  requestAnimationFrame(loop);
 }
 
 
+/* =========================
+   INITIALIZE
+========================= */
+
 resize();
-makeStars();
+createStars();
+draw();
 
 </script>
 
